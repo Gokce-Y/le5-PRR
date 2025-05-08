@@ -1,0 +1,69 @@
+---
+title: "R Notebook"
+output:
+  html_document:
+    df_print: paged
+---
+```{r message=FALSE, warning=FALSE, include=FALSE}
+#install.packages("PerformanceAnalytics")
+library(quantmod)
+library(PerformanceAnalytics)
+symbols <- c("AAPL", "MSFT", "TSLA")
+getSymbols(symbols, src = "yahoo", from = "2019-01-01", to = "2024-12-31")
+```
+
+
+• Which stock has the highest risk ?
+
+In finance, risk is typically measured by the variability of asset prices over time. This variability, or volatility, is commonly quantified using the standard deviation of daily returns. In simple terms, the more daily returns fluctuate, the riskier the asset is considered to be.
+Here, we present the comparison of standard deviations for our three assets, which allows us to assess and compare the variability of their daily returns. This provides a direct measure of the relative risk associated with each stock
+
+```{r}
+returns_aapl <- dailyReturn(Ad(AAPL))
+returns_msft <- dailyReturn(Ad(MSFT))
+returns_tsla <- dailyReturn(Ad(TSLA))
+sd(returns_aapl)
+sd(returns_msft)
+sd(returns_tsla)
+```
+
+Tesla (TSLA) has the highest risk (volatility) among the three stocks, as it has the largest standard deviation of daily returns. Tesla's volatility is approximately twice that of Apple, indicating that fluctuations in Tesla's stock price could be twice as large compared to Apple's.
+
+However, volatility alone does not capture the full picture of risk. It reflects short-term fluctuations but does not show how deep or prolonged a loss could be. Therefore, we continue our analysis by examining the Maximum Drawdown, which provides insight into the most severe loss an investor could have experienced during the observation period.
+
+```{r}
+maxDrawdown(returns_aapl)
+maxDrawdown(returns_msft)
+maxDrawdown(returns_tsla)
+```
+
+The Maximum Drawdown results further confirm Tesla's high-risk profile. While Apple and Microsoft experienced drawdowns of approximately 31% and 37% respectively, Tesla's drawdown exceeded 73%. This indicates that during the worst observed period, Tesla investors could have faced a significantly deeper loss, highlighting the asset's vulnerability to extreme downturns. Historically, Tesla’s maximum drawdown has also been larger compared to Apple and Microsoft; according to one analysis, since 2010, Tesla stock has experienced a peak loss of around 61%, whereas Apple’s largest drawdown remained around 40%.
+
+
+Although Maximum Drawdown reveals the magnitude of worst-case losses, it does not account for the efficiency of risk-taking over time. Therefore, to complement our understanding of risk, we consider the Sharpe Ratio—a key metric that relates return to volatility and provides insight into the quality of each asset's risk-adjusted performance.
+
+The Sharpe Ratio is another key measure. It evaluates returns relative to the level of risk taken. It helps answer the crucial question for investors: "How much return am I getting for each unit of risk?"
+
+```{r}
+SharpeRatio(returns_aapl, Rf = 0)
+SharpeRatio(returns_msft, Rf = 0)
+SharpeRatio(returns_tsla, Rf = 0)
+```
+Across most risk measures, Apple delivers the best risk-adjusted returns, making it the most efficient investment among the three. While Tesla is more volatile, its performance under extreme conditions, particularly under Expected Shortfall and downside risk (SemiSD), is relatively strong.Tesla’nın Sharpe oranı beklenenden yüksek çıktı, çünkü incelenen dönemde olağanüstü getiri performansı göstererek yüksek volatilitesini telafi etti . Microsoft, on the other hand, shows the most conservative profile with consistently lower Sharpe Ratios
+
+
+Lastly, we include Value at Risk (VaR), which serves as a financial weather forecast, indicating the probability of extreme losses ahead. While VaR tells us how much we could lose with a certain confidence level (e.g., 95%), it does not capture the severity of losses beyond that threshold. In this analysis, we use the variance-covariance method (also known as the parametric method), which assumes normally distributed returns.
+
+```{r}
+VaR(returns_aapl, p = 0.95, method = "gaussian")
+VaR(returns_msft, p = 0.95, method = "gaussian")
+VaR(returns_tsla, p = 0.95, method = "gaussian")
+```
+
+The Value at Risk (VaR) results align with the earlier volatility and drawdown findings. Tesla again exhibits the highest downside risk, with a potential daily loss of 6.4% at a 95% confidence level. Apple and Microsoft show significantly lower VaR values, reinforcing their relatively lower risk profiles. This is consistent with expectations, as Tesla’s price distribution has a wider variance, increasing the likelihood of large losses even if they are low-probability events. While VaR does not capture the full magnitude of extreme losses, it serves as an important indicator of short-term downside probability.
+
+Together with the Sharpe Ratio and Maximum Drawdown, the VaR analysis completes our risk profile comparison. Each metric highlights a different facet of risk—volatility, worst-case loss, efficiency, and probability of loss—and together they offer a comprehensive view of how each asset behaves under uncertainty.
+
+---
+https://www.thestreet.com/apple/stock/apple-vs-tesla-which-growth-stock-to-own#:~:text=Apple%20vs,vs.%20AAPL%27s%2040
+
