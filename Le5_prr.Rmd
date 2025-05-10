@@ -19,12 +19,15 @@ In finance, risk is typically measured by the variability of asset prices over t
 Here, we present the comparison of standard deviations for our three assets, which allows us to assess and compare the variability of their daily returns. This provides a direct measure of the relative risk associated with each stock
 
 ```{r}
-returns_aapl <- dailyReturn(Ad(AAPL))
-returns_msft <- dailyReturn(Ad(MSFT))
-returns_tsla <- dailyReturn(Ad(TSLA))
-sd(returns_aapl)
-sd(returns_msft)
-sd(returns_tsla)
+# Calculate standard deviations
+sd_aapl <- sd(returns_aapl)
+sd_msft <- sd(returns_msft)
+sd_tsla <- sd(returns_tsla)
+
+# Print with labels
+cat("Standard Deviation of AAPL:", sd_aapl, "\n")
+cat("Standard Deviation of MSFT:", sd_msft, "\n")
+cat("Standard Deviation of TSLA:", sd_tsla, "\n")
 ```
 
 Tesla (TSLA) has the highest risk (volatility) among the three stocks, as it has the largest standard deviation of daily returns. Tesla's volatility is approximately twice that of Apple, indicating that fluctuations in Tesla's stock price could be twice as large compared to Apple's.
@@ -32,9 +35,13 @@ Tesla (TSLA) has the highest risk (volatility) among the three stocks, as it has
 However, volatility alone does not capture the full picture of risk. It reflects short-term fluctuations but does not show how deep or prolonged a loss could be. Therefore, we continue our analysis by examining the Maximum Drawdown, which provides insight into the most severe loss an investor could have experienced during the observation period.
 
 ```{r}
-maxDrawdown(returns_aapl)
-maxDrawdown(returns_msft)
-maxDrawdown(returns_tsla)
+mdd_aapl <- maxDrawdown(returns_aapl)
+mdd_msft <- maxDrawdown(returns_msft)
+mdd_tsla <- maxDrawdown(returns_tsla)
+
+cat("Maximum Drawdown of AAPL:", mdd_aapl, "\n")
+cat("Maximum Drawdown of MSFT:", mdd_msft, "\n")
+cat("Maximum Drawdown of TSLA:", mdd_tsla, "\n")
 ```
 
 The Maximum Drawdown results further confirm Tesla's high-risk profile. While Apple and Microsoft experienced drawdowns of approximately 31% and 37% respectively, Tesla's drawdown exceeded 73%. This indicates that during the worst observed period, Tesla investors could have faced a significantly deeper loss, highlighting the asset's vulnerability to extreme downturns. Historically, Tesla’s maximum drawdown has also been larger compared to Apple and Microsoft; according to one analysis, since 2010, Tesla stock has experienced a peak loss of around 61%, whereas Apple’s largest drawdown remained around 40%.
@@ -54,10 +61,19 @@ Across most risk measures, Apple delivers the best risk-adjusted returns, making
 
 Lastly, we include Value at Risk (VaR), which serves as a financial weather forecast, indicating the probability of extreme losses ahead. While VaR tells us how much we could lose with a certain confidence level (e.g., 95%), it does not capture the severity of losses beyond that threshold. In this analysis, we use the variance-covariance method (also known as the parametric method), which assumes normally distributed returns.
 
+
+
+
 ```{r}
-VaR(returns_aapl, p = 0.95, method = "gaussian")
-VaR(returns_msft, p = 0.95, method = "gaussian")
-VaR(returns_tsla, p = 0.95, method = "gaussian")
+# Calculate Value at Risk (95%, Gaussian method)
+var_aapl <- VaR(returns_aapl, p = 0.95, method = "gaussian")
+var_msft <- VaR(returns_msft, p = 0.95, method = "gaussian")
+var_tsla <- VaR(returns_tsla, p = 0.95, method = "gaussian")
+
+# Print with labels
+cat("95% VaR (Gaussian) of AAPL:", var_aapl, "\n")
+cat("95% VaR (Gaussian) of MSFT:", var_msft, "\n")
+cat("95% VaR (Gaussian) of TSLA:", var_tsla, "\n")
 ```
 
 The Value at Risk (VaR) results align with the earlier volatility and drawdown findings. Tesla again exhibits the highest downside risk, with a potential daily loss of 6.4% at a 95% confidence level. Apple and Microsoft show significantly lower VaR values, reinforcing their relatively lower risk profiles. This is consistent with expectations, as Tesla’s price distribution has a wider variance, increasing the likelihood of large losses even if they are low-probability events. While VaR does not capture the full magnitude of extreme losses, it serves as an important indicator of short-term downside probability.
