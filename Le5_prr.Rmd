@@ -19,6 +19,14 @@ In finance, risk is typically measured by the variability of asset prices over t
 Here, we present the comparison of standard deviations for our three assets, which allows us to assess and compare the variability of their daily returns. This provides a direct measure of the relative risk associated with each stock
 
 ```{r}
+# Calculate daily returns
+returns_aapl <- dailyReturn(Ad(AAPL))
+returns_msft <- dailyReturn(Ad(MSFT))
+returns_tsla <- dailyReturn(Ad(TSLA))
+```
+
+
+```{r}
 # Calculate standard deviations
 sd_aapl <- sd(returns_aapl)
 sd_msft <- sd(returns_msft)
@@ -77,6 +85,8 @@ cat("95% VaR (Gaussian) of TSLA:", var_tsla, "\n")
 ```
 
 The Value at Risk (VaR) results align with the earlier volatility and drawdown findings. Tesla again exhibits the highest downside risk, with a potential daily loss of 6.4% at a 95% confidence level. Apple and Microsoft show significantly lower VaR values, reinforcing their relatively lower risk profiles. This is consistent with expectations, as Tesla’s price distribution has a wider variance, increasing the likelihood of large losses even if they are low-probability events. While VaR does not capture the full magnitude of extreme losses, it serves as an important indicator of short-term downside probability.
+
+VaR provides a probabilistic estimate of potential losses, helping investors understand how much they might lose on a typical day under normal market conditions. However, it does not account for rare but extreme losses (‘black swan’ events). Therefore, VaR should be used alongside other risk measures, such as Maximum Drawdown and Sharpe Ratio, to get a more complete picture of an asset’s risk profile.”
 
 Together with the Sharpe Ratio and Maximum Drawdown, the VaR analysis completes our risk profile comparison. Each metric highlights a different facet of risk—volatility, worst-case loss, efficiency, and probability of loss—and together they offer a comprehensive view of how each asset behaves under uncertainty.
 
