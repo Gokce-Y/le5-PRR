@@ -90,6 +90,85 @@ VaR provides a probabilistic estimate of potential losses, helping investors und
 
 Together with the Sharpe Ratio and Maximum Drawdown, the VaR analysis completes our risk profile comparison. Each metric highlights a different facet of risk—volatility, worst-case loss, efficiency, and probability of loss—and together they offer a comprehensive view of how each asset behaves under uncertainty.
 
+•	Which stock had the highest average return?
+
+Measuring return is a fundamental step in evaluating investment performance. However, the chosen calculation method can significantly influence investors’ interpretations of these results. Two commonly used methods are the arithmetic mean return and the geometric mean return, each with its advantages and limitations. The appropriate method should be selected based on the purpose and context of the analysis.
+
+When looking at the returns for my investment portfolio, should I use arithmetic or geometric returns?
+
+And here’s the response we got from ChatGPT:
+
+When analyzing investment returns, both arithmetic and geometric returns have their uses, and it ultimately depends on the context and the purpose of your analysis.
+
+The arithmetic mean is calculated by adding up all daily or annual returns over a period and dividing the total by the number of observations. Due to its simplicity, it is widely used for short-term performance comparisons and return estimates.
+
+
+```{r}
+mean_return_aapl <- mean(returns_aapl)
+mean_return_msft <- mean(returns_msft)
+mean_return_tsla <- mean(returns_tsla)
+
+cat("Average Return of Apple:", mean_return_aapl, "\n")
+cat("Average Return of Microsoft:", mean_return_msft, "\n")
+cat("Average Return of Tesla:", mean_return_tsla, "\n")
+
+```
+
+The geometric mean, on the other hand, accounts for the effects of compounding and provides a more realistic measure of long-term investment performance. This method reflects the cumulative effect of returns over time and is generally more reliable for long-term evaluations.
+
+According to an analysis published by TheStreet, the arithmetic mean may be preferable for short-term estimates, while the geometric mean offers a more realistic view for long-term performance, especially in volatile market conditions.
+
+```{r}
+geo_mean_aapl <- prod(1 + returns_aapl)^(1 / length(returns_aapl)) - 1
+
+geo_mean_msft <- prod(1 + returns_msft)^(1 / length(returns_msft)) - 1
+
+geo_mean_tsla <- prod(1 + returns_tsla)^(1 / length(returns_tsla)) - 1
+
+cat("Geometric Mean Return of Apple:", geo_mean_aapl, "\n")
+cat("Geometric Mean Return of Microsoft:", geo_mean_msft, "\n")
+cat("Geometric Mean Return of Tesla:", geo_mean_tsla, "\n")
+
+```
+
+A Closer Look at the Results
+
+```{r}
+cat("+-----------+------------------+------------------+\n")
+cat("| Stock     | Arithmetic Mean   | Geometric Mean    |\n")
+cat("+-----------+------------------+------------------+\n")
+cat("| Apple     | 0.001448724       | 0.001260127       |\n")
+cat("| Microsoft | 0.00115778        | 0.0009909139      |\n")
+cat("| Tesla     | 0.002814698       | 0.001993475       |\n")
+cat("+-----------+------------------+------------------+\n")
+
+```
+
+As the results show, Tesla achieved the highest performance based on both the arithmetic and geometric average returns.
+
+Tesla has faced more challenges than most companies. However, under Elon Musk’s leadership, Tesla has turned the vision of electric vehicles into reality. This achievement pushed Tesla’s market value beyond $1 trillion, making Musk, one of its largest shareholders, one of the richest individuals in the world.
+
+🍏 Apple – A Symbol of Long-Term Stability and Growth
+
+Apple is not only one of the largest tech companies but also one of the most successful companies in history. Under Steve Jobs’ leadership, products such as Mac computers, iPods, and iPhones changed the world. However, trust in Apple’s stock was not always high.
+
+In 2002, Apple’s share price dropped below $0.10, leading many investors to consider it worthless.
+
+Nevertheless, Apple delivered extraordinary growth, achieving a total return of 154,000% and making history. This milestone was reached when Apple’s share price hit an all-time high in January 2022, rewarding long-term investors with exceptional gains.
+
+Today, Apple remains a symbol of reliable, long-term growth, maintaining its position in portfolios as a balanced investment option with moderate risk and stable returns.
+
+
+
+•	Does diversification reduce risk?
+
 ---
 https://www.thestreet.com/apple/stock/apple-vs-tesla-which-growth-stock-to-own#:~:text=Apple%20vs,vs.%20AAPL%27s%2040
+
+---
+https://www.thestreet.com/apple/stock/apple-vs-tesla-which-growth-stock-to-own#:~:text=Apple%20vs,vs.%20AAPL%27s%2040
+
+https://www.investopedia.com/articles/investing/071113/breaking-down-geometric-mean.asp
+
+https://www.thestreet.com/retirement-daily/your-money/testing-chatgpt-arithmetic-vs-geometric-returns
 
