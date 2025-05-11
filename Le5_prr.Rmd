@@ -162,6 +162,82 @@ Today, Apple remains a symbol of reliable, long-term growth, maintaining its pos
 
 •	Does diversification reduce risk?
 
+There is a well-known saying often attributed to economist Harry Markowitz, the father of Modern Portfolio Theory:
+
+“Diversification is the only free lunch in investing.”
+
+Or, as people like to put it more casually: “Don’t put all your eggs in one basket.”
+
+Diversification means spreading investments across different assets to reduce exposure to the risk of any single investment. The basic idea is that not all assets move in the same direction at the same time. By combining assets with different risk and return profiles, investors can potentially reduce the overall risk of their portfolio while maintaining reasonable return expectations.
+
+We can prove this by calculating standard deviation both for diversified investment and single one and compare them. As we know, standard deviation considered to be a "Risk Marker", so we expect diversified portfolio to have lower standard deviation score.
+
+
+```{r}
+
+portfolio_returns <- (returns_aapl + returns_msft + returns_tsla) / 3
+
+cat("Standard Deviation of AAPL:", sd(returns_aapl), "\n")
+cat("Standard Deviation of MSFT:", sd(returns_msft), "\n")
+cat("Standard Deviation of TSLA:", sd(returns_tsla), "\n")
+cat("Standard Deviation of Diversified Portfolio:", sd(portfolio_returns), "\n")
+```
+As you can see, our diversified portfolio has 2% of Standard Deviation, meanwhile, AAPL and MSFT have 1.94% and 1.83% respectively. That means 2 things. 1 - I was wrong, Standard deviation of our portfolio is higher. 2 - AAPL and MSFT itself more safe asset to have. 
+
+Why then Mr. Markowitz was so desperate about diversification? 
+And the answer is - return. Let me explain.
+
+When we combine these three stocks into an equally weighted diversified portfolio, the portfolio’s standard deviation is 2.17%, which is lower than Tesla’s individual risk, but slightly higher than Apple’s or Microsoft’s risk.
+
+This result demonstrates that diversification reduces the overall impact of the riskiest asset in the portfolio. Even though the portfolio still carries some risk, the extreme fluctuations of Tesla are balanced out by the relative stability of Apple and Microsoft.
+
+Moreover, the potential return of the diversified portfolio remains attractive, since it still benefits from Tesla’s higher return potential while reducing its extreme downside risk.
+
+Therefore, this example illustrates why diversification makes sense in practice: it helps to lower risk while preserving opportunities for higher returns.
+
+Is simple terms, as we want our portfolio to grow, we can invest in risky assets to gain more and still consider our portfolio to be safe, using this.
+
+Let me demonstrate it, using the following chart:
+
+
+```{r}
+
+# Portfolio already calculated as portfolio_returns
+mean_portfolio <- mean(portfolio_returns)
+sd_portfolio <- sd(portfolio_returns)
+
+metrics <- data.frame(
+  Asset = c("Apple", "Microsoft", "Tesla", "Diversified Portfolio"),
+  Mean_Return = c(mean_return_aapl, mean_return_msft, mean_return_tsla, mean_portfolio),
+  Standard_Deviation = c(sd_aapl, sd_msft, sd_tsla, sd_portfolio)
+)
+
+print(metrics)
+
+# График риск / доходность
+plot(metrics$Standard_Deviation, metrics$Mean_Return,
+     xlab = "Risk (Standard Deviation)",
+     ylab = "Return (Mean Daily Return)",
+     main = "Risk-Return Comparison",
+     pch = 19, col = c("blue", "green", "red", "black"),
+     xlim = c(0, max(metrics$Standard_Deviation) * 1.1),
+     ylim = c(0, max(metrics$Mean_Return) * 1.1))
+text(metrics$Standard_Deviation, metrics$Mean_Return, labels = metrics$Asset, pos = 4)
+```
+The Risk-Return Comparison chart illustrates how diversification helps to balance risk and return.
+
+We can see that Tesla provides the highest average return (0.28%) but comes with the highest risk (4.06% standard deviation). On the other hand, Apple and Microsoft offer lower risk (around 1.8–1.9%) but also lower returns (around 0.11–0.14%).
+
+The diversified portfolio, which combines all three stocks equally, achieves a higher return (0.18%) than Apple and Microsoft individually, while maintaining a moderate risk (2.17%), significantly lower than Tesla’s standalone risk.
+
+This shows that diversification allows us to benefit from the growth potential of riskier assets like Tesla while keeping the overall risk at an acceptable level thanks to the stabilizing effect of safer assets like Apple and Microsoft.
+
+In other words, diversification does not eliminate risk entirely, but it smooths the extremes, providing a more balanced and resilient portfolio that preserves the opportunity for higher returns without fully exposing the investor to the risks of any single stock.
+
+⸻
+
+
+
 ---
 https://www.thestreet.com/apple/stock/apple-vs-tesla-which-growth-stock-to-own#:~:text=Apple%20vs,vs.%20AAPL%27s%2040
 
@@ -171,4 +247,8 @@ https://www.thestreet.com/apple/stock/apple-vs-tesla-which-growth-stock-to-own#:
 https://www.investopedia.com/articles/investing/071113/breaking-down-geometric-mean.asp
 
 https://www.thestreet.com/retirement-daily/your-money/testing-chatgpt-arithmetic-vs-geometric-returns
+
+---
+
+https://corporatefinanceinstitute.com/resources/career-map/sell-side/capital-markets/harry-markowitz/
 
