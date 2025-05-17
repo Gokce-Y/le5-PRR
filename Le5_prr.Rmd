@@ -158,7 +158,7 @@ Nevertheless, Apple delivered extraordinary growth, achieving a total return of 
 
 Today, Apple remains a symbol of reliable, long-term growth, maintaining its position in portfolios as a balanced investment option with moderate risk and stable returns.
 
-
+---------------------------------------
 
 •	Does diversification reduce risk?
 
@@ -169,6 +169,173 @@ There is a well-known saying often attributed to economist Harry Markowitz, the 
 Or, as people like to put it more casually: “Don’t put all your eggs in one basket.”
 
 Diversification means spreading investments across different assets to reduce exposure to the risk of any single investment. The basic idea is that not all assets move in the same direction at the same time. By combining assets with different risk and return profiles, investors can potentially reduce the overall risk of their portfolio while maintaining reasonable return expectations.
+
+The goal of diversification is to reduce overall volatility and achieve a more balanced return by combining assets with low correlation.
+Correlation analysis is conducted to identify which assets, when combined in a portfolio, will have a risk-reducing effect.
+
+Low correlation reduces portfolio volatility.
+High correlation increases portfolio volatility.
+
+```{r echo=FALSE, message=TRUE}
+prices <- merge(Cl(AAPL), Cl(TSLA), Cl(MSFT))
+colnames(prices) <- c("AAPL", "TSLA", "MSFT")
+returns <- na.omit(ROC(prices, type = "discrete"))
+cor_matrix <- cor(returns)
+print(cor_matrix)
+
+```
+
+AAPL – TSLA = 0.47
+A moderate positive relationship. Sometimes they move together, sometimes they don’t.
+
+AAPL – MSFT = 0.73
+A strong positive relationship. They generally move in the same direction.
+
+TSLA – MSFT = 0.43
+A moderate relationship. Sometimes they move similarly, but there is also a degree of independence.
+
+We will use these results to build our portfolio diversification strategy.
+Assets with very high correlation (such as AAPL and MSFT) provide less diversification.
+
+Assets with moderate or low correlation (such as TSLA and AAPL or TSLA and MSFT) provide better diversification.
+
+The goal is to determine whether the assets added to the portfolio balance each other or tend to move in the same direction.
+
+Our hypothesis is as follows:
+
+Low Risk / Stability Objective:
+A portfolio weighted 50% Microsoft and 50% Apple is expected to provide stable but limited returns due to its low volatility.
+
+Balanced Risk / Return Objective:
+A portfolio weighted 50% Microsoft, 30% Apple, and 20% Tesla is expected to offer moderate returns with an acceptable level of risk.
+
+High Return / High Risk Objective:
+A portfolio weighted 50% Tesla, 25% Apple, and 25% Microsoft is expected to deliver the highest potential returns, despite higher volatility.
+
+Maximum Sharpe Ratio Objective:
+A portfolio weighted 85% Microsoft and 15% Tesla is expected to provide the highest return per unit of risk, maximizing the Sharpe Ratio.
+
+```{r}
+portfolio_analysis <- function(weights, returns, name) {
+  mean_ret <- colMeans(returns) * 252
+  cov_matrix <- cov(returns) * 252
+  port_return <- sum(weights * mean_ret)
+  port_variance <- t(weights) %*% cov_matrix %*% weights
+  port_volatility <- sqrt(port_variance)
+  port_sharpe <- port_return / port_volatility
+  
+  cat("\n====", name, "====\n")
+  cat("Annual Return: ", round(port_return * 100, 2), "%\n")
+  cat("Annual Volatility: ", round(port_volatility * 100, 2), "%\n")
+  cat("Sharpe Ratio: ", round(port_sharpe, 2), "\n")
+}
+
+# Portfolio Scenarios
+portfolio_analysis(c(0.50, 0.00, 0.50), returns, "Low Risk / Stability")
+portfolio_analysis(c(0.30, 0.20, 0.50), returns, "Balanced Risk / Return")
+portfolio_analysis(c(0.25, 0.50, 0.25), returns, "High Return / High Risk")
+portfolio_analysis(c(0.00, 0.15, 0.85), returns, "Maximum Sharpe Ratio")
+
+```
+
+Balanced Portfolio (50% MSFT – 30% AAPL – 20% TSLA)
+Achieved the highest Sharpe ratio of 1.28, with an annual return of 39% and volatility of 30.5%. This represents the best balance between risk and return.
+
+Low-Risk Portfolio (50% MSFT – 50% AAPL)
+Stands out as the least risky option, offering a 32% annual return with relatively low volatility.
+
+High-Return Portfolio (50% TSLA – 25% AAPL – 25% MSFT)
+Provides the highest potential return of 51.5% annually, but comes with high volatility of 40.8%, making it susceptible to significant fluctuations.
+
+Maximum Sharpe Portfolio (85% MSFT – 15% TSLA)
+Appears theoretically efficient, but does not outperform the balanced portfolio in practice.
+
+Recommendation
+We recommend the 50% MSFT – 30% AAPL – 20% TSLA allocation as the optimal choice for investors seeking a strong balance between risk and return, supported by the best Sharpe ratio.
+
+For risk-averse investors, the 50% MSFT – 50% AAPL portfolio is suggested.
+
+For aggressive investors, the 50% TSLA-weighted portfolio could be considered, acknowledging its higher volatility.
+
+*Impact of Portfolio Returns on Individual Stocks*
+
+Identifying Key Drivers: Regression analysis helps determine which stock has the greatest influence on overall portfolio movements.
+
+Measuring Sensitivity: It quantifies how sensitive each stock is to changes in the portfolio, using the beta coefficient as a measure of this sensitivity.
+
+Assessing Diversification: It provides insights into whether the portfolio benefits from true diversification or if certain stocks dominate the portfolio’s risk and return dynamics.
+
+```{r}
+weights <- c(0.30, 0.20, 0.50)  # AAPL, TSLA, MSFT
+
+# Portföy getirisi
+portfolio_returns <- returns_aapl * 0.30 + returns_tsla * 0.20 + returns_msft * 0.50
+
+lm(returns_aapl ~ portfolio_returns)
+lm(returns_tsla ~ portfolio_returns)
+lm(returns_msft ~ portfolio_returns)
+
+```
+
+
+Tesla is the most influential stock in driving portfolio movements, with a beta greater than 1.6.
+
+Apple and Microsoft help stabilize the portfolio with their lower volatility.
+
+The primary source of risk is Tesla, but it also offers the highest return potential.
+
+This structure clearly demonstrates effective diversification, highlighting Tesla as the main driver of risk.
+
+To reduce overall portfolio risk, one could lower the Tesla weighting while maintaining diversification.
+
+
+
+```{r}
+print_regression_summary <- function(stock_name, stock_returns, portfolio_returns) {
+  model <- lm(stock_returns ~ portfolio_returns)
+  model_summary <- summary(model)
+  model_confint <- confint(model)
+  
+  beta <- model_summary$coefficients[2, 1]
+  t_value <- model_summary$coefficients[2, 3]
+  p_value <- model_summary$coefficients[2, 4]
+  conf_low <- model_confint[2, 1]
+  conf_high <- model_confint[2, 2]
+  r_squared <- model_summary$r.squared * 100
+  
+  cat("========================================\n")
+  cat("        REGRESSION SUMMARY -", stock_name, "\n")
+  cat("========================================\n")
+  cat(sprintf("%-25s: %.4f\n", "Beta", beta))
+  cat(sprintf("%-25s: %.2f\n", "t-value", t_value))
+  cat(sprintf("%-25s: %.4g\n", "p-value", p_value))
+  cat(sprintf("%-25s: [%.4f , %.4f]\n", "95% Confidence Interval", conf_low, conf_high))
+  cat(sprintf("%-25s: %.2f%%\n", "R-squared", r_squared))
+  cat("========================================\n\n")
+}
+
+weights <- c(0.30, 0.20, 0.50)
+portfolio_returns <- returns_aapl * weights[1] + returns_tsla * weights[2] + returns_msft * weights[3]
+
+print_regression_summary("AAPL", returns_aapl, portfolio_returns)
+print_regression_summary("TSLA", returns_tsla, portfolio_returns)
+print_regression_summary("MSFT", returns_msft, portfolio_returns)
+
+```
+The table above clearly presents the influence of AAPL, TSLA, and MSFT on the portfolio returns, along with the statistical reliability of these effects.
+
+AAPL and MSFT show strong and statistically significant relationships with the portfolio returns. Their beta values, around 0.85-0.86, indicate that these stocks contribute stabilizing effects to the portfolio’s performance. MSFT, in particular, stands out with the highest explanatory power (77.46%), making it the most aligned stock with the portfolio performance.
+
+TSLA, with a high beta of 1.62, is identified as the most influential stock in driving portfolio movements. This highlights TSLA's high volatility and risk, but also its high return potential. However, its lower R² (59.11%) compared to AAPL and MSFT suggests that TSLA carries additional, less predictable risk factors beyond the portfolio’s general movements.
+
+All results are highly statistically significant (p < 0.001), and the narrow and positive confidence intervals further confirm the robustness and reliability of the estimates.
+
+
+This table demonstrates that MSFT and AAPL act as stabilizers, contributing to portfolio consistency, while TSLA drives both risk and return dynamics.
+For a balanced portfolio, the weight of TSLA should be carefully managed to control overall risk, while AAPL and MSFT provide stable and reliable performance contributions.
+
+
+--------------------------------------------------------------------------------
 
 We can prove this by calculating standard deviation both for diversified investment and single one and compare them. As we know, standard deviation considered to be a "Risk Marker", so we expect diversified portfolio to have lower standard deviation score.
 
@@ -202,7 +369,6 @@ Let me demonstrate it, using the following chart:
 
 ```{r}
 
-# Portfolio already calculated as portfolio_returns
 mean_portfolio <- mean(portfolio_returns)
 sd_portfolio <- sd(portfolio_returns)
 
@@ -214,7 +380,6 @@ metrics <- data.frame(
 
 print(metrics)
 
-# График риск / доходность
 plot(metrics$Standard_Deviation, metrics$Mean_Return,
      xlab = "Risk (Standard Deviation)",
      ylab = "Return (Mean Daily Return)",
@@ -243,10 +408,22 @@ t_test_result <- t.test(as.vector(returns_tsla), as.vector(returns_aapl))
 print(t_test_result)
 ```
 
+--------------------------------------------------------------------	
+
+
+
+
+
+
+
+
+
+
+
+
 	
 	
-	
-	
+--------------------------------------------------------------------	
 	
 	•	Linear Regression: A regression analysis between Tesla’s returns and the diversified portfolio’s returns revealed a positive relationship. This indicates that Tesla’s performance has a measurable influence on the portfolio’s overall return, contributing to both its higher return and higher volatility. This supports the idea that adding a riskier asset like Tesla can boost portfolio performance while still maintaining a balanced risk profile thanks to diversification.
 	
