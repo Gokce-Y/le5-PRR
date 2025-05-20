@@ -363,32 +363,36 @@ Moreover, the potential return of the diversified portfolio remains attractive, 
 
 Therefore, this example illustrates why diversification makes sense in practice: it helps to lower risk while preserving opportunities for higher returns.
 
-Is simple terms, as we want our portfolio to grow, we can invest in risky assets to gain more and still consider our portfolio to be safe, using this.
+Is simple terms, as we want our portfolio to grow, we can invest in risky assets to gain more and still consider our portfolio to be safe, using diversification.
 
 Let me demonstrate it, using the following chart:
 
 
 ```{r}
 
-mean_portfolio <- mean(portfolio_returns)
-sd_portfolio <- sd(portfolio_returns)
+library(ggplot2)
+library(tidyr)
+library(scales)  # для форматирования в проценты
 
-metrics <- data.frame(
-  Asset = c("Apple", "Microsoft", "Tesla", "Diversified Portfolio"),
-  Mean_Return = c(mean_return_aapl, mean_return_msft, mean_return_tsla, mean_portfolio),
-  Standard_Deviation = c(sd_aapl, sd_msft, sd_tsla, sd_portfolio)
-)
+# Преобразуем данные
+metrics_long <- metrics %>%
+  pivot_longer(cols = c(Mean_Return, Standard_Deviation),
+               names_to = "Metric", values_to = "Value")
 
-print(metrics)
-
-plot(metrics$Standard_Deviation, metrics$Mean_Return,
-     xlab = "Risk (Standard Deviation)",
-     ylab = "Return (Mean Daily Return)",
-     main = "Risk-Return Comparison",
-     pch = 19, col = c("blue", "green", "red", "black"),
-     xlim = c(0, max(metrics$Standard_Deviation) * 1.1),
-     ylim = c(0, max(metrics$Mean_Return) * 1.1))
-text(metrics$Standard_Deviation, metrics$Mean_Return, labels = metrics$Asset, pos = 4)
+# Bar Plot с процентами
+ggplot(metrics_long, aes(x = Asset, y = Value, fill = Metric)) +
+  geom_col(position = position_dodge(width = 0.7), width = 0.6) +
+  geom_text(aes(label = scales::percent(Value, accuracy = 0.01)),
+            position = position_dodge(width = 0.7),
+            vjust = -0.5, size = 4) +
+  scale_y_continuous(labels = scales::percent_format(accuracy = 0.01)) +
+  scale_fill_manual(values = c("Mean_Return" = "steelblue", "Standard_Deviation" = "tomato")) +
+  labs(title = "Risk & Return Comparison by Asset",
+       x = "",
+       y = "Percentage",
+       fill = "Metric") +
+  theme_minimal(base_size = 14) +
+  theme(legend.position = "top")
 ```
 The Risk-Return Comparison chart illustrates how diversification helps to balance risk and return.
 
