@@ -336,6 +336,7 @@ For a balanced portfolio, the weight of TSLA should be carefully managed to cont
 
 
 --------------------------------------------------------------------------------
+Diversification means spreading investments across different assets to reduce exposure to the risk of any single investment. The basic idea is that not all assets move in the same direction at the same time. By combining assets with different risk and return profiles, investors can potentially reduce the overall risk of their portfolio while maintaining reasonable return expectations. That's why it's common to spread your investment in different field. One of the most popular ratio is 40/40/20 - 40% in solid asset like gold or bonds,which has low risk. 40% - ETF's with low-median parameter of risk and reasonable returns (8% per year approx) and 20% individual stocks, which will lead to high returns but also higher risk. "Good to know, ETF's (S&P500, for example), has 500 stock companies as a bundle. Recently, NVIDIA increased a lot in value, which drove the S&P500 way above. But, the risk measures are the same. That means, we benefit a lot from the cases like this, but if company goes bankrupt - it will not affect your portfolio significantly. It's brilliant" - Leave if you like Kuzu
 
 We can prove this by calculating standard deviation both for diversified investment and single one and compare them. As we know, standard deviation considered to be a "Risk Marker", so we expect diversified portfolio to have lower standard deviation score.
 
