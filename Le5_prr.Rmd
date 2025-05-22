@@ -8,41 +8,94 @@ output:
 #install.packages("PerformanceAnalytics")
 library(quantmod)
 library(PerformanceAnalytics)
+library(ggplot2)
+library(dplyr)
+library(lubridate)
+library(scales)
 symbols <- c("AAPL", "MSFT", "TSLA")
 getSymbols(symbols, src = "yahoo", from = "2019-01-01", to = "2024-12-31")
 ```
 
-
-• Which stock has the highest risk ?
-
-In finance, risk is typically measured by the variability of asset prices over time. This variability, or volatility, is commonly quantified using the standard deviation of daily returns. In simple terms, the more daily returns fluctuate, the riskier the asset is considered to be.
-Here, we present the comparison of standard deviations for our three assets, which allows us to assess and compare the variability of their daily returns. This provides a direct measure of the relative risk associated with each stock
-
-```{r}
-# Calculate daily returns
+```{r include=FALSE}
 returns_aapl <- dailyReturn(Ad(AAPL))
 returns_msft <- dailyReturn(Ad(MSFT))
 returns_tsla <- dailyReturn(Ad(TSLA))
 ```
 
+• Which stock has the highest risk ?
+
+Volatility is a frequently encountered concept in the world of finance and holds great importance for investors. But what exactly is volatility? Volatility refers to the degree of fluctuation in the price of a financial asset. In other words, it describes how quickly and significantly the price of an asset changes. For investors, volatility can imply risk and uncertainty, but when managed with the right strategies, it can also present opportunities.
+
+In volatility, which measures the price fluctuations of an asset, sudden and large changes in stock prices indicate high volatility. On the other hand, low volatility means that prices are more stable and predictable. Volatility plays a critical role in helping investors determine their risk tolerance and adjust their portfolios accordingly.
+
+There are several ways to measure volatility, but the most common method is the calculation of standard deviation. Standard deviation indicates how much an asset’s return deviates from its average. A high standard deviation signifies high volatility, while a low standard deviation indicates low volatility.
+
+High volatility is often observed during periods of increased uncertainty and risk in the markets. During such times, prices can experience sudden and significant changes, which may amplify both potential gains and losses. Investors should closely monitor market movements during high-volatility periods and rebalance their portfolios if necessary. High volatility typically arises due to factors such as economic uncertainty, political events, natural disasters, or major company-specific developments.
+
+Our data spans from 2019 to 2024, a period marked by major global events that likely influenced market volatility. These include the COVID-19 pandemic (2020), vaccine-driven recovery (2021), the Russia-Ukraine war (2022), global inflation and interest rate hikes (2022–2023), the AI stock rally (2023), and political and economic uncertainty in 2024. These events should be considered when interpreting volatility and asset performance.
+
+To examine these effects more closely, we will use the volatility graph. This will allow us to compare the daily return variability of Apple, Microsoft, and Tesla more accurately, and better understand how each stock responded to market events during the 2019–2024 period.
 
 ```{r}
-# Calculate standard deviations
-sd_aapl <- sd(returns_aapl)
-sd_msft <- sd(returns_msft)
-sd_tsla <- sd(returns_tsla)
+returns_combined <- merge(returns_aapl, returns_msft, returns_tsla)
+colnames(returns_combined) <- c("AAPL", "MSFT", "TSLA")
+returns_df <- data.frame(Date = index(returns_combined),
+                         coredata(returns_combined))
+returns_df <- returns_df %>%
+  mutate(HalfYear = paste0(year(Date), " H", ifelse(month(Date) <= 6, 1, 2)))
 
-# Print with labels
-cat("Standard Deviation of AAPL:", sd_aapl, "\n")
-cat("Standard Deviation of MSFT:", sd_msft, "\n")
-cat("Standard Deviation of TSLA:", sd_tsla, "\n")
+grouped_data <- returns_df %>%
+  group_by(HalfYear) %>%
+  summarise(across(c(AAPL, MSFT, TSLA),
+                   list(Mean = ~mean(.x, na.rm = TRUE),
+                        SD = ~sd(.x, na.rm = TRUE))))
+
+
 ```
 
-Tesla (TSLA) has the highest risk (volatility) among the three stocks, as it has the largest standard deviation of daily returns. Tesla's volatility is approximately twice that of Apple, indicating that fluctuations in Tesla's stock price could be twice as large compared to Apple's.
-
-However, volatility alone does not capture the full picture of risk. It reflects short-term fluctuations but does not show how deep or prolonged a loss could be. Therefore, we continue our analysis by examining the Maximum Drawdown, which provides insight into the most severe loss an investor could have experienced during the observation period.
 
 ```{r}
+grouped_data$HalfYear <- factor(grouped_data$HalfYear, levels = grouped_data$HalfYear)
+
+event_labels <- data.frame(
+  HalfYear = c("2020 H1", "2021 H1", "2022 H1", "2022 H2", "2023 H1"),
+  label = c("COVID", "Vaccine", "War", "Inflation", "AI")
+)
+
+ggplot(grouped_data, aes(x = HalfYear)) +
+  geom_point(aes(y = AAPL_SD, color = "AAPL"), size = 3) +
+  geom_point(aes(y = MSFT_SD, color = "MSFT"), size = 3) +
+  geom_point(aes(y = TSLA_SD, color = "TSLA"), size = 3) +
+  geom_line(aes(y = AAPL_SD, group = 1, color = "AAPL")) +
+  geom_line(aes(y = MSFT_SD, group = 2, color = "MSFT")) +
+  geom_line(aes(y = TSLA_SD, group = 3, color = "TSLA")) +
+  geom_vline(xintercept = which(grouped_data$HalfYear %in% event_labels$HalfYear),
+             linetype = "dashed", color = "red", size = 0.6) +
+  geom_text(data = event_labels,
+            aes(x = HalfYear, y = 0, label = label),
+            inherit.aes = FALSE,
+            angle = 0, vjust = 1.5, hjust = 0.5, color = "red", size = 3.5) +
+  labs(title = "6-Month Volatility (Standard Deviation) and Key Events",
+       subtitle = "Periodical volatility comparison of AAPL, MSFT, and TSLA",
+       x = "Period (Half-Year)",
+       y = "Standard Deviation (Volatility)",
+       color = "Stock") +
+  theme_minimal(base_size = 12) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+```
+
+
+Between 2019 and 2024, the 6-month volatility trends of AAPL, MSFT, and TSLA reveal how major global events impacted market stability. During the first half of 2020, at the onset of the COVID-19 pandemic, all three stocks experienced a significant increase in volatility, with TSLA showing the most pronounced spike. As vaccines became available in the first half of 2021, market confidence returned and volatility decreased notably across all three stocks.
+
+In 2022, the outbreak of the Russia–Ukraine war and rising global inflation led to another wave of volatility, particularly affecting AAPL and TSLA, while MSFT remained relatively stable. By the first half of 2023, despite the surge in AI-driven market optimism, volatility declined further for AAPL and MSFT, whereas TSLA maintained a consistently higher risk profile.
+
+Throughout the period, MSFT exhibited the most stable and defensive behavior, AAPL responded moderately to global shifts, and TSLA stood out with the highest and most persistent volatility, reflecting its sensitivity to both macroeconomic shocks and speculative dynamics.
+
+While volatility shows how much returns fluctuate, it does not capture the depth or duration of losses. To address this, we examine the Maximum Drawdown (MDD), which measures the largest decline from a peak to a trough over the entire period. It reflects the most severe loss an investor could have faced.
+
+
+```{r echo=FALSE}
 mdd_aapl <- maxDrawdown(returns_aapl)
 mdd_msft <- maxDrawdown(returns_msft)
 mdd_tsla <- maxDrawdown(returns_tsla)
@@ -52,47 +105,15 @@ cat("Maximum Drawdown of MSFT:", mdd_msft, "\n")
 cat("Maximum Drawdown of TSLA:", mdd_tsla, "\n")
 ```
 
-The Maximum Drawdown results further confirm Tesla's high-risk profile. While Apple and Microsoft experienced drawdowns of approximately 31% and 37% respectively, Tesla's drawdown exceeded 73%. This indicates that during the worst observed period, Tesla investors could have faced a significantly deeper loss, highlighting the asset's vulnerability to extreme downturns. Historically, Tesla’s maximum drawdown has also been larger compared to Apple and Microsoft; according to one analysis, since 2010, Tesla stock has experienced a peak loss of around 61%, whereas Apple’s largest drawdown remained around 40%.
+The Maximum Drawdown results further confirm Tesla's high-risk profile. While Apple and Microsoft experienced drawdowns of approximately 31% and 37% respectively, Tesla's drawdown exceeded 73%. This indicates that during the worst observed period, Tesla investors could have faced a significantly deeper loss, highlighting the asset's vulnerability to extreme downturns.
 
+Historically, Tesla’s maximum drawdown has also been larger compared to Apple and Microsoft; according to one analysis, since 2010, Tesla stock has experienced a peak loss of around 61%, whereas Apple’s largest drawdown remained around 40%.
 
-Although Maximum Drawdown reveals the magnitude of worst-case losses, it does not account for the efficiency of risk-taking over time. Therefore, to complement our understanding of risk, we consider the Sharpe Ratio—a key metric that relates return to volatility and provides insight into the quality of each asset's risk-adjusted performance.
-
-The Sharpe Ratio is another key measure. It evaluates returns relative to the level of risk taken. It helps answer the crucial question for investors: "How much return am I getting for each unit of risk?"
-
-```{r}
-SharpeRatio(returns_aapl, Rf = 0)
-SharpeRatio(returns_msft, Rf = 0)
-SharpeRatio(returns_tsla, Rf = 0)
-```
-Across most risk measures, Apple delivers the best risk-adjusted returns, making it the most efficient investment among the three. While Tesla is more volatile, its performance under extreme conditions, particularly under Expected Shortfall and downside risk (SemiSD), is relatively strong.Tesla’nın Sharpe oranı beklenenden yüksek çıktı, çünkü incelenen dönemde olağanüstü getiri performansı göstererek yüksek volatilitesini telafi etti . Microsoft, on the other hand, shows the most conservative profile with consistently lower Sharpe Ratios
-
-
-Lastly, we include Value at Risk (VaR), which serves as a financial weather forecast, indicating the probability of extreme losses ahead. While VaR tells us how much we could lose with a certain confidence level (e.g., 95%), it does not capture the severity of losses beyond that threshold. In this analysis, we use the variance-covariance method (also known as the parametric method), which assumes normally distributed returns.
-
-
-
-
-```{r}
-# Calculate Value at Risk (95%, Gaussian method)
-var_aapl <- VaR(returns_aapl, p = 0.95, method = "gaussian")
-var_msft <- VaR(returns_msft, p = 0.95, method = "gaussian")
-var_tsla <- VaR(returns_tsla, p = 0.95, method = "gaussian")
-
-# Print with labels
-cat("95% VaR (Gaussian) of AAPL:", var_aapl, "\n")
-cat("95% VaR (Gaussian) of MSFT:", var_msft, "\n")
-cat("95% VaR (Gaussian) of TSLA:", var_tsla, "\n")
-```
-
-The Value at Risk (VaR) results align with the earlier volatility and drawdown findings. Tesla again exhibits the highest downside risk, with a potential daily loss of 6.4% at a 95% confidence level. Apple and Microsoft show significantly lower VaR values, reinforcing their relatively lower risk profiles. This is consistent with expectations, as Tesla’s price distribution has a wider variance, increasing the likelihood of large losses even if they are low-probability events. While VaR does not capture the full magnitude of extreme losses, it serves as an important indicator of short-term downside probability.
-
-VaR provides a probabilistic estimate of potential losses, helping investors understand how much they might lose on a typical day under normal market conditions. However, it does not account for rare but extreme losses (‘black swan’ events). Therefore, VaR should be used alongside other risk measures, such as Maximum Drawdown and Sharpe Ratio, to get a more complete picture of an asset’s risk profile.”
-
-Together with the Sharpe Ratio and Maximum Drawdown, the VaR analysis completes our risk profile comparison. Each metric highlights a different facet of risk—volatility, worst-case loss, efficiency, and probability of loss—and together they offer a comprehensive view of how each asset behaves under uncertainty.
+However, in finance, risk does not simply mean danger—it also represents opportunity. Higher risk can imply greater return potential, which is why many investors are still attracted to stocks like TSLA despite their volatility and drawdown profiles.
 
 •	Which stock had the highest average return?
 
-Measuring return is a fundamental step in evaluating investment performance. However, the chosen calculation method can significantly influence investors’ interpretations of these results. Two commonly used methods are the arithmetic mean return and the geometric mean return, each with its advantages and limitations. The appropriate method should be selected based on the purpose and context of the analysis.
+Two commonly used methods are the arithmetic mean return and the geometric mean return, each with its advantages and limitations. The appropriate method should be selected based on the purpose and context of the analysis.
 
 When looking at the returns for my investment portfolio, should I use arithmetic or geometric returns?
 
@@ -104,13 +125,34 @@ The arithmetic mean is calculated by adding up all daily or annual returns over 
 
 
 ```{r}
-mean_return_aapl <- mean(returns_aapl)
-mean_return_msft <- mean(returns_msft)
-mean_return_tsla <- mean(returns_tsla)
+grouped_data$HalfYear <- factor(grouped_data$HalfYear, levels = grouped_data$HalfYear)
 
-cat("Average Return of Apple:", mean_return_aapl, "\n")
-cat("Average Return of Microsoft:", mean_return_msft, "\n")
-cat("Average Return of Tesla:", mean_return_tsla, "\n")
+event_labels <- data.frame(
+  HalfYear = c("2020 H1", "2021 H1", "2022 H1", "2022 H2", "2023 H1"),
+  label = c("COVID", "Vaccine", "War", "Inflation", "AI")
+)
+
+ggplot(grouped_data, aes(x = HalfYear)) +
+  geom_line(aes(y = AAPL_Mean, color = "AAPL"), group = 1, size = 1) +
+  geom_line(aes(y = MSFT_Mean, color = "MSFT"), group = 2, size = 1) +
+  geom_line(aes(y = TSLA_Mean, color = "TSLA"), group = 3, size = 1) +
+  geom_point(aes(y = AAPL_Mean, color = "AAPL"), size = 2) +
+  geom_point(aes(y = MSFT_Mean, color = "MSFT"), size = 2) +
+  geom_point(aes(y = TSLA_Mean, color = "TSLA"), size = 2) +
+  geom_hline(yintercept = 0, linetype = "dotted", color = "black") +
+  geom_vline(xintercept = which(grouped_data$HalfYear %in% event_labels$HalfYear),
+             linetype = "dashed", color = "red", size = 0.5) +
+  geom_text(data = event_labels,
+            aes(x = HalfYear, y = 0, label = label),
+            inherit.aes = FALSE,
+            angle = 0, vjust = 1.5, hjust = 0.5, color = "red", size = 3.5) +
+  labs(title = "6-Month Average Returns by Stock with Key Events",
+       x = "Period (Half-Year)",
+       y = "Average Daily Return",
+       color = "Stock") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  scale_y_continuous(labels = scales::percent)
+  
 
 ```
 
@@ -118,17 +160,46 @@ The geometric mean, on the other hand, accounts for the effects of compounding a
 
 According to an analysis published by TheStreet, the arithmetic mean may be preferable for short-term estimates, while the geometric mean offers a more realistic view for long-term performance, especially in volatile market conditions.
 
+
 ```{r}
-geo_mean_aapl <- prod(1 + returns_aapl)^(1 / length(returns_aapl)) - 1
+geo_mean <- function(x) {
+  prod(1 + x)^(1/length(x)) - 1
+}
 
-geo_mean_msft <- prod(1 + returns_msft)^(1 / length(returns_msft)) - 1
+geo_data <- returns_df %>%
+  group_by(HalfYear) %>%
+  summarise(
+    AAPL_Geo = geo_mean(AAPL),
+    MSFT_Geo = geo_mean(MSFT),
+    TSLA_Geo = geo_mean(TSLA)
+  )
 
-geo_mean_tsla <- prod(1 + returns_tsla)^(1 / length(returns_tsla)) - 1
+```
 
-cat("Geometric Mean Return of Apple:", geo_mean_aapl, "\n")
-cat("Geometric Mean Return of Microsoft:", geo_mean_msft, "\n")
-cat("Geometric Mean Return of Tesla:", geo_mean_tsla, "\n")
 
+
+```{r}
+ggplot(grouped_data, aes(x = HalfYear)) +
+  geom_line(aes(y = AAPL_Geo, color = "AAPL"), size = 1) +
+  geom_line(aes(y = MSFT_Geo, color = "MSFT"), size = 1) +
+  geom_line(aes(y = TSLA_Geo, color = "TSLA"), size = 1) +
+  geom_point(aes(y = AAPL_Geo, color = "AAPL"), size = 2) +
+  geom_point(aes(y = MSFT_Geo, color = "MSFT"), size = 2) +
+  geom_point(aes(y = TSLA_Geo, color = "TSLA"), size = 2) +
+  geom_hline(yintercept = 0, linetype = "dotted", color = "black") +
+  geom_vline(xintercept = which(grouped_data$HalfYear %in% event_labels$HalfYear),
+             linetype = "dashed", color = "red", size = 0.5) +
+  geom_text(data = event_labels,
+            aes(x = HalfYear, y = 0, label = label),
+            inherit.aes = FALSE,
+            vjust = 1.5, hjust = 0.5, color = "red", size = 3.5) +
+  labs(title = "6-Month Geometric Average Returns by Stock with Key Events",
+       x = "Period (Half-Year)",
+       y = "Geometric Average Daily Return",
+       color = "Stock") +
+  scale_y_continuous(labels = percent) +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
 ```
 
 A Closer Look at the Results
@@ -278,15 +349,15 @@ lm(returns_msft ~ portfolio_returns)
 ```
 
 
-Tesla is the most influential stock in driving portfolio movements, with a beta greater than 1.6.
+The regression results confirm that Tesla (TSLA) is the most influential stock in explaining portfolio movements, with a beta greater than 1.6, indicating high sensitivity to portfolio changes.
 
-Apple and Microsoft help stabilize the portfolio with their lower volatility.
+Apple (AAPL) and Microsoft (MSFT) both show lower beta values (around 0.85), suggesting that they help stabilize the portfolio by contributing steady returns with lower volatility.
 
-The primary source of risk is Tesla, but it also offers the highest return potential.
+While Tesla represents the primary source of portfolio risk, it also offers the highest return potential.
 
-This structure clearly demonstrates effective diversification, highlighting Tesla as the main driver of risk.
+Overall, the results demonstrate that the portfolio achieves effective diversification, but Tesla dominates the risk profile.
 
-To reduce overall portfolio risk, one could lower the Tesla weighting while maintaining diversification.
+To better manage overall portfolio risk, reducing the weight of Tesla could be considered, while keeping Apple and Microsoft as stabilizing components to maintain diversification benefits.
 
 
 
@@ -336,7 +407,6 @@ For a balanced portfolio, the weight of TSLA should be carefully managed to cont
 
 
 --------------------------------------------------------------------------------
-Diversification means spreading investments across different assets to reduce exposure to the risk of any single investment. The basic idea is that not all assets move in the same direction at the same time. By combining assets with different risk and return profiles, investors can potentially reduce the overall risk of their portfolio while maintaining reasonable return expectations. That's why it's common to spread your investment in different field. One of the most popular ratio is 40/40/20 - 40% in solid asset like gold or bonds,which has low risk. 40% - ETF's with low-median parameter of risk and reasonable returns (8% per year approx) and 20% individual stocks, which will lead to high returns but also higher risk. "Good to know, ETF's (S&P500, for example), has 500 stock companies as a bundle. Recently, NVIDIA increased a lot in value, which drove the S&P500 way above. But, the risk measures are the same. That means, we benefit a lot from the cases like this, but if company goes bankrupt - it will not affect your portfolio significantly. It's brilliant" - Leave if you like Kuzu
 
 We can prove this by calculating standard deviation both for diversified investment and single one and compare them. As we know, standard deviation considered to be a "Risk Marker", so we expect diversified portfolio to have lower standard deviation score.
 
@@ -363,36 +433,32 @@ Moreover, the potential return of the diversified portfolio remains attractive, 
 
 Therefore, this example illustrates why diversification makes sense in practice: it helps to lower risk while preserving opportunities for higher returns.
 
-Is simple terms, as we want our portfolio to grow, we can invest in risky assets to gain more and still consider our portfolio to be safe, using diversification.
+Is simple terms, as we want our portfolio to grow, we can invest in risky assets to gain more and still consider our portfolio to be safe, using this.
 
 Let me demonstrate it, using the following chart:
 
 
 ```{r}
 
-library(ggplot2)
-library(tidyr)
-library(scales)  # для форматирования в проценты
+mean_portfolio <- mean(portfolio_returns)
+sd_portfolio <- sd(portfolio_returns)
 
-# Преобразуем данные
-metrics_long <- metrics %>%
-  pivot_longer(cols = c(Mean_Return, Standard_Deviation),
-               names_to = "Metric", values_to = "Value")
+metrics <- data.frame(
+  Asset = c("Apple", "Microsoft", "Tesla", "Diversified Portfolio"),
+  Mean_Return = c(mean_return_aapl, mean_return_msft, mean_return_tsla, mean_portfolio),
+  Standard_Deviation = c(sd_aapl, sd_msft, sd_tsla, sd_portfolio)
+)
 
-# Bar Plot с процентами
-ggplot(metrics_long, aes(x = Asset, y = Value, fill = Metric)) +
-  geom_col(position = position_dodge(width = 0.7), width = 0.6) +
-  geom_text(aes(label = scales::percent(Value, accuracy = 0.01)),
-            position = position_dodge(width = 0.7),
-            vjust = -0.5, size = 4) +
-  scale_y_continuous(labels = scales::percent_format(accuracy = 0.01)) +
-  scale_fill_manual(values = c("Mean_Return" = "steelblue", "Standard_Deviation" = "tomato")) +
-  labs(title = "Risk & Return Comparison by Asset",
-       x = "",
-       y = "Percentage",
-       fill = "Metric") +
-  theme_minimal(base_size = 14) +
-  theme(legend.position = "top")
+print(metrics)
+
+plot(metrics$Standard_Deviation, metrics$Mean_Return,
+     xlab = "Risk (Standard Deviation)",
+     ylab = "Return (Mean Daily Return)",
+     main = "Risk-Return Comparison",
+     pch = 19, col = c("blue", "green", "red", "black"),
+     xlim = c(0, max(metrics$Standard_Deviation) * 1.1),
+     ylim = c(0, max(metrics$Mean_Return) * 1.1))
+text(metrics$Standard_Deviation, metrics$Mean_Return, labels = metrics$Asset, pos = 4)
 ```
 The Risk-Return Comparison chart illustrates how diversification helps to balance risk and return.
 
