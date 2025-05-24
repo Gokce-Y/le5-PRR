@@ -62,26 +62,37 @@ event_labels <- data.frame(
   label = c("COVID", "Vaccine", "War", "Inflation", "AI")
 )
 
-ggplot(grouped_data, aes(x = HalfYear)) +
-  geom_point(aes(y = AAPL_SD, color = "AAPL"), size = 3) +
-  geom_point(aes(y = MSFT_SD, color = "MSFT"), size = 3) +
-  geom_point(aes(y = TSLA_SD, color = "TSLA"), size = 3) +
-  geom_line(aes(y = AAPL_SD, group = 1, color = "AAPL")) +
-  geom_line(aes(y = MSFT_SD, group = 2, color = "MSFT")) +
-  geom_line(aes(y = TSLA_SD, group = 3, color = "TSLA")) +
-  geom_vline(xintercept = which(grouped_data$HalfYear %in% event_labels$HalfYear),
-             linetype = "dashed", color = "red", size = 0.6) +
-  geom_text(data = event_labels,
-            aes(x = HalfYear, y = 0, label = label),
-            inherit.aes = FALSE,
-            angle = 0, vjust = 1.5, hjust = 0.5, color = "red", size = 3.5) +
-  labs(title = "6-Month Volatility (Standard Deviation) and Key Events",
-       subtitle = "Periodical volatility comparison of AAPL, MSFT, and TSLA",
-       x = "Period (Half-Year)",
-       y = "Standard Deviation (Volatility)",
-       color = "Stock") +
-  theme_minimal(base_size = 12) +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+volatility_plot <- ggplot(grouped_data, aes(x = HalfYear)) +
+  geom_line(aes(y = AAPL_SD, color = "AAPL"), group = 1, size = 1) +
+  geom_line(aes(y = MSFT_SD, color = "MSFT"), group = 2, size = 1) +
+  geom_line(aes(y = TSLA_SD, color = "TSLA"), group = 3, size = 1) +
+  geom_point(aes(y = AAPL_SD, color = "AAPL"), size = 2) +
+  geom_point(aes(y = MSFT_SD, color = "MSFT"), size = 2) +
+  geom_point(aes(y = TSLA_SD, color = "TSLA"), size = 2) +
+  geom_vline(
+    xintercept = which(grouped_data$HalfYear %in% event_labels$HalfYear),
+    linetype = "dashed", color = "red", size = 0.5
+  ) +
+  geom_text(
+    data = event_labels,
+    aes(x = HalfYear, y = 0, label = label),
+    inherit.aes = FALSE,
+    angle = 0, vjust = 1.5, hjust = 0.5,
+    color = "red", size = 3.5
+  ) +
+  labs(
+    title = "6-Month Volatility by Stock with Key Events",
+    subtitle = "Standard Deviation of Daily Returns for AAPL, MSFT, and TSLA",
+    x = "Period (Half-Year)",
+    y = "Volatility (Standard Deviation)",
+    color = "Stock"
+  ) +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1)
+  )
+
+
+volatility_plot
 
 ```
 
@@ -92,7 +103,7 @@ In 2022, the outbreak of the Russia–Ukraine war and rising global inflation le
 
 Throughout the period, MSFT exhibited the most stable and defensive behavior, AAPL responded moderately to global shifts, and TSLA stood out with the highest and most persistent volatility, reflecting its sensitivity to both macroeconomic shocks and speculative dynamics.
 
-While volatility shows how much returns fluctuate, it does not capture the depth or duration of losses. To address this, we examine the Maximum Drawdown (MDD), which measures the largest decline from a peak to a trough over the entire period. It reflects the most severe loss an investor could have faced.
+While volatility captures the fluctuations in returns, it does not reflect the magnitude of losses investors might endure. To address this limitation, we turn to the concept of Maximum Drawdown (MDD), which measures the largest decline from a peak to a trough over the entire period. It reflects the most severe loss an investor could have faced.
 
 
 ```{r echo=FALSE}
@@ -132,7 +143,7 @@ event_labels <- data.frame(
   label = c("COVID", "Vaccine", "War", "Inflation", "AI")
 )
 
-ggplot(grouped_data, aes(x = HalfYear)) +
+return_plot <- ggplot(grouped_data, aes(x = HalfYear)) +
   geom_line(aes(y = AAPL_Mean, color = "AAPL"), group = 1, size = 1) +
   geom_line(aes(y = MSFT_Mean, color = "MSFT"), group = 2, size = 1) +
   geom_line(aes(y = TSLA_Mean, color = "TSLA"), group = 3, size = 1) +
@@ -140,94 +151,42 @@ ggplot(grouped_data, aes(x = HalfYear)) +
   geom_point(aes(y = MSFT_Mean, color = "MSFT"), size = 2) +
   geom_point(aes(y = TSLA_Mean, color = "TSLA"), size = 2) +
   geom_hline(yintercept = 0, linetype = "dotted", color = "black") +
-  geom_vline(xintercept = which(grouped_data$HalfYear %in% event_labels$HalfYear),
-             linetype = "dashed", color = "red", size = 0.5) +
-  geom_text(data = event_labels,
-            aes(x = HalfYear, y = 0, label = label),
-            inherit.aes = FALSE,
-            angle = 0, vjust = 1.5, hjust = 0.5, color = "red", size = 3.5) +
-  labs(title = "6-Month Average Returns by Stock with Key Events",
-       x = "Period (Half-Year)",
-       y = "Average Daily Return",
-       color = "Stock") +
+  geom_vline(
+    xintercept = which(grouped_data$HalfYear %in% event_labels$HalfYear),
+    linetype = "dashed", color = "red", size = 0.5
+  ) +
+  geom_text(
+    data = event_labels,
+    aes(x = HalfYear, y = 0, label = label),
+    inherit.aes = FALSE,
+    angle = 0, vjust = 1.5, hjust = 0.5,
+    color = "red", size = 3.5
+  ) +
+  labs(
+    title = "6-Month Average Returns by Stock with Key Events",
+    x = "Period (Half-Year)",
+    y = "Average Daily Return",
+    color = "Stock"
+  ) +
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
   scale_y_continuous(labels = scales::percent)
-  
+
+
+return_plot
 
 ```
 
-The geometric mean, on the other hand, accounts for the effects of compounding and provides a more realistic measure of long-term investment performance. This method reflects the cumulative effect of returns over time and is generally more reliable for long-term evaluations.
+At the beginning of 2020, when COVID-19 brought the entire world to a standstill, uncertainty prevailed. But technology responded swiftly. Remote work, digital services, and electric vehicles surged—and Tesla soared. Microsoft and Apple, on the other hand, offered investors confidence through more cautious but steady growth.
 
-According to an analysis published by TheStreet, the arithmetic mean may be preferable for short-term estimates, while the geometric mean offers a more realistic view for long-term performance, especially in volatile market conditions.
+When vaccines were developed, markets breathed a sigh of relief and stock prices climbed. However, new threats soon emerged: war, supply chain issues, and inflation. The year 2022 became a period of decline for all tech stocks, prompting investors to act more cautiously once again.
 
+Then came 2023—the rise of artificial intelligence. Microsoft stood out with its partnership with OpenAI. Tesla once again drew attention with its autonomous technologies. As always, Apple maintained its stability. Technology once again began to shape the future.
 
 ```{r}
-geo_mean <- function(x) {
-  prod(1 + x)^(1/length(x)) - 1
-}
-
-geo_data <- returns_df %>%
-  group_by(HalfYear) %>%
-  summarise(
-    AAPL_Geo = geo_mean(AAPL),
-    MSFT_Geo = geo_mean(MSFT),
-    TSLA_Geo = geo_mean(TSLA)
-  )
-
+return_plot
+volatility_plot
 ```
-
-
-
-```{r}
-ggplot(grouped_data, aes(x = HalfYear)) +
-  geom_line(aes(y = AAPL_Geo, color = "AAPL"), size = 1) +
-  geom_line(aes(y = MSFT_Geo, color = "MSFT"), size = 1) +
-  geom_line(aes(y = TSLA_Geo, color = "TSLA"), size = 1) +
-  geom_point(aes(y = AAPL_Geo, color = "AAPL"), size = 2) +
-  geom_point(aes(y = MSFT_Geo, color = "MSFT"), size = 2) +
-  geom_point(aes(y = TSLA_Geo, color = "TSLA"), size = 2) +
-  geom_hline(yintercept = 0, linetype = "dotted", color = "black") +
-  geom_vline(xintercept = which(grouped_data$HalfYear %in% event_labels$HalfYear),
-             linetype = "dashed", color = "red", size = 0.5) +
-  geom_text(data = event_labels,
-            aes(x = HalfYear, y = 0, label = label),
-            inherit.aes = FALSE,
-            vjust = 1.5, hjust = 0.5, color = "red", size = 3.5) +
-  labs(title = "6-Month Geometric Average Returns by Stock with Key Events",
-       x = "Period (Half-Year)",
-       y = "Geometric Average Daily Return",
-       color = "Stock") +
-  scale_y_continuous(labels = percent) +
-  theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
-```
-
-A Closer Look at the Results
-
-```{r}
-cat("+-----------+------------------+------------------+\n")
-cat("| Stock     | Arithmetic Mean   | Geometric Mean    |\n")
-cat("+-----------+------------------+------------------+\n")
-cat("| Apple     | 0.001448724       | 0.001260127       |\n")
-cat("| Microsoft | 0.00115778        | 0.0009909139      |\n")
-cat("| Tesla     | 0.002814698       | 0.001993475       |\n")
-cat("+-----------+------------------+------------------+\n")
-
-```
-
-As the results show, Tesla achieved the highest performance based on both the arithmetic and geometric average returns.
-
-Tesla has faced more challenges than most companies. However, under Elon Musk’s leadership, Tesla has turned the vision of electric vehicles into reality. This achievement pushed Tesla’s market value beyond $1 trillion, making Musk, one of its largest shareholders, one of the richest individuals in the world.
-
-🍏 Apple – A Symbol of Long-Term Stability and Growth
-
-Apple is not only one of the largest tech companies but also one of the most successful companies in history. Under Steve Jobs’ leadership, products such as Mac computers, iPods, and iPhones changed the world. However, trust in Apple’s stock was not always high.
-
-In 2002, Apple’s share price dropped below $0.10, leading many investors to consider it worthless.
-
-Nevertheless, Apple delivered extraordinary growth, achieving a total return of 154,000% and making history. This milestone was reached when Apple’s share price hit an all-time high in January 2022, rewarding long-term investors with exceptional gains.
-
-Today, Apple remains a symbol of reliable, long-term growth, maintaining its position in portfolios as a balanced investment option with moderate risk and stable returns.
+When these two charts are examined side by side, they clearly demonstrate that the fundamental law of financial markets—the "risk-return relationship"—is being directly confirmed, especially in the context of technology stocks.
 
 ---------------------------------------
 
@@ -301,8 +260,7 @@ portfolio_analysis <- function(weights, returns, name) {
   cat("Sharpe Ratio: ", round(port_sharpe, 2), "\n")
 }
 
-# Portfolio Scenarios
-portfolio_analysis(c(0.50, 0.00, 0.50), returns, "Low Risk / Stability")
+portfolio_analysis(c(0.50, 0.30, 0.20), returns, "Low Risk / Stability")
 portfolio_analysis(c(0.30, 0.20, 0.50), returns, "Balanced Risk / Return")
 portfolio_analysis(c(0.25, 0.50, 0.25), returns, "High Return / High Risk")
 portfolio_analysis(c(0.00, 0.15, 0.85), returns, "Maximum Sharpe Ratio")
@@ -328,82 +286,11 @@ For risk-averse investors, the 50% MSFT – 50% AAPL portfolio is suggested.
 
 For aggressive investors, the 50% TSLA-weighted portfolio could be considered, acknowledging its higher volatility.
 
-*Impact of Portfolio Returns on Individual Stocks*
-
-Identifying Key Drivers: Regression analysis helps determine which stock has the greatest influence on overall portfolio movements.
-
-Measuring Sensitivity: It quantifies how sensitive each stock is to changes in the portfolio, using the beta coefficient as a measure of this sensitivity.
-
-Assessing Diversification: It provides insights into whether the portfolio benefits from true diversification or if certain stocks dominate the portfolio’s risk and return dynamics.
-
-```{r}
-weights <- c(0.30, 0.20, 0.50)  # AAPL, TSLA, MSFT
-
-# Portföy getirisi
-portfolio_returns <- returns_aapl * 0.30 + returns_tsla * 0.20 + returns_msft * 0.50
-
-lm(returns_aapl ~ portfolio_returns)
-lm(returns_tsla ~ portfolio_returns)
-lm(returns_msft ~ portfolio_returns)
-
-```
-
-
-The regression results confirm that Tesla (TSLA) is the most influential stock in explaining portfolio movements, with a beta greater than 1.6, indicating high sensitivity to portfolio changes.
-
-Apple (AAPL) and Microsoft (MSFT) both show lower beta values (around 0.85), suggesting that they help stabilize the portfolio by contributing steady returns with lower volatility.
-
-While Tesla represents the primary source of portfolio risk, it also offers the highest return potential.
-
-Overall, the results demonstrate that the portfolio achieves effective diversification, but Tesla dominates the risk profile.
-
 To better manage overall portfolio risk, reducing the weight of Tesla could be considered, while keeping Apple and Microsoft as stabilizing components to maintain diversification benefits.
 
 
 
-```{r}
-print_regression_summary <- function(stock_name, stock_returns, portfolio_returns) {
-  model <- lm(stock_returns ~ portfolio_returns)
-  model_summary <- summary(model)
-  model_confint <- confint(model)
-  
-  beta <- model_summary$coefficients[2, 1]
-  t_value <- model_summary$coefficients[2, 3]
-  p_value <- model_summary$coefficients[2, 4]
-  conf_low <- model_confint[2, 1]
-  conf_high <- model_confint[2, 2]
-  r_squared <- model_summary$r.squared * 100
-  
-  cat("========================================\n")
-  cat("        REGRESSION SUMMARY -", stock_name, "\n")
-  cat("========================================\n")
-  cat(sprintf("%-25s: %.4f\n", "Beta", beta))
-  cat(sprintf("%-25s: %.2f\n", "t-value", t_value))
-  cat(sprintf("%-25s: %.4g\n", "p-value", p_value))
-  cat(sprintf("%-25s: [%.4f , %.4f]\n", "95% Confidence Interval", conf_low, conf_high))
-  cat(sprintf("%-25s: %.2f%%\n", "R-squared", r_squared))
-  cat("========================================\n\n")
-}
 
-weights <- c(0.30, 0.20, 0.50)
-portfolio_returns <- returns_aapl * weights[1] + returns_tsla * weights[2] + returns_msft * weights[3]
-
-print_regression_summary("AAPL", returns_aapl, portfolio_returns)
-print_regression_summary("TSLA", returns_tsla, portfolio_returns)
-print_regression_summary("MSFT", returns_msft, portfolio_returns)
-
-```
-The table above clearly presents the influence of AAPL, TSLA, and MSFT on the portfolio returns, along with the statistical reliability of these effects.
-
-AAPL and MSFT show strong and statistically significant relationships with the portfolio returns. Their beta values, around 0.85-0.86, indicate that these stocks contribute stabilizing effects to the portfolio’s performance. MSFT, in particular, stands out with the highest explanatory power (77.46%), making it the most aligned stock with the portfolio performance.
-
-TSLA, with a high beta of 1.62, is identified as the most influential stock in driving portfolio movements. This highlights TSLA's high volatility and risk, but also its high return potential. However, its lower R² (59.11%) compared to AAPL and MSFT suggests that TSLA carries additional, less predictable risk factors beyond the portfolio’s general movements.
-
-All results are highly statistically significant (p < 0.001), and the narrow and positive confidence intervals further confirm the robustness and reliability of the estimates.
-
-
-This table demonstrates that MSFT and AAPL act as stabilizers, contributing to portfolio consistency, while TSLA drives both risk and return dynamics.
-For a balanced portfolio, the weight of TSLA should be carefully managed to control overall risk, while AAPL and MSFT provide stable and reliable performance contributions.
 
 
 --------------------------------------------------------------------------------
