@@ -12,15 +12,25 @@ library(ggplot2)
 library(dplyr)
 library(lubridate)
 library(scales)
+library(plotly)
 symbols <- c("AAPL", "MSFT", "TSLA")
 getSymbols(symbols, src = "yahoo", from = "2019-01-01", to = "2024-12-31")
 ```
+
+In this project, adjusted closing prices were used to calculate returns. The adjusted price accounts for corporate actions such as dividends, stock splits, and distributions, ensuring that only genuine market-driven price movements are reflected in the return calculations. This leads to more accurate and consistent return estimates, which is crucial for any meaningful financial analysis or portfolio evaluation.
+
 
 ```{r include=FALSE}
 returns_aapl <- dailyReturn(Ad(AAPL))
 returns_msft <- dailyReturn(Ad(MSFT))
 returns_tsla <- dailyReturn(Ad(TSLA))
+
+aapl_prices <- na.omit(Ad(AAPL))
+
 ```
+
+
+
 
 • Which stock has the highest risk ?
 
@@ -54,60 +64,68 @@ grouped_data <- returns_df %>%
 ```
 
 
+
 ```{r}
 grouped_data$HalfYear <- factor(grouped_data$HalfYear, levels = grouped_data$HalfYear)
 
 event_labels <- data.frame(
-  HalfYear = c("2020 H1", "2021 H1", "2022 H1", "2022 H2", "2023 H1"),
-  label = c("COVID", "Vaccine", "War", "Inflation", "AI")
+  HalfYear = c("2020 H1", "2021 H1", "2022 H1", "2023 H1"),
+  label = c("COVID", "Vaccine", "War", "AI")
 )
 
-volatility_plot <- ggplot(grouped_data, aes(x = HalfYear)) +
-  geom_line(aes(y = AAPL_SD, color = "AAPL"), group = 1, size = 1) +
-  geom_line(aes(y = MSFT_SD, color = "MSFT"), group = 2, size = 1) +
-  geom_line(aes(y = TSLA_SD, color = "TSLA"), group = 3, size = 1) +
-  geom_point(aes(y = AAPL_SD, color = "AAPL"), size = 2) +
-  geom_point(aes(y = MSFT_SD, color = "MSFT"), size = 2) +
-  geom_point(aes(y = TSLA_SD, color = "TSLA"), size = 2) +
-  geom_vline(
-    xintercept = which(grouped_data$HalfYear %in% event_labels$HalfYear),
-    linetype = "dashed", color = "red", size = 0.5
-  ) +
-  geom_text(
+event_lines <- lapply(event_labels$HalfYear, function(h) {
+  list(
+    type = "line",
+    x0 = h,
+    x1 = h,
+    y0 = 0,
+    y1 = 1,
+    xref = "x",
+    yref = "paper",
+    line = list(color = "red", dash = "dash", width = 0.5)
+  )
+})
+```
+
+
+```{r}
+
+volatility_plot <- plot_ly(data = grouped_data) %>%
+  add_trace(x = ~HalfYear, y = ~AAPL_SD, name = "AAPL", type = 'scatter', mode = 'lines+markers') %>%
+  add_trace(x = ~HalfYear, y = ~MSFT_SD, name = "MSFT", type = 'scatter', mode = 'lines+markers') %>%
+  add_trace(x = ~HalfYear, y = ~TSLA_SD, name = "TSLA", type = 'scatter', mode = 'lines+markers') %>%
+  add_annotations(
     data = event_labels,
-    aes(x = HalfYear, y = 0, label = label),
-    inherit.aes = FALSE,
-    angle = 0, vjust = 1.5, hjust = 0.5,
-    color = "red", size = 3.5
-  ) +
-  labs(
+    x = ~HalfYear,
+    y = 0,
+    text = ~label,
+    showarrow = FALSE,
+    yanchor = "bottom",
+    font = list(color = "red", size = 10)
+  ) %>%
+  layout(
     title = "6-Month Volatility by Stock with Key Events",
-    subtitle = "Standard Deviation of Daily Returns for AAPL, MSFT, and TSLA",
-    x = "Period (Half-Year)",
-    y = "Volatility (Standard Deviation)",
-    color = "Stock"
-  ) +
-  theme(
-    axis.text.x = element_text(angle = 45, hjust = 1)
+    xaxis = list(title = "Period (Half-Year)", tickangle = -45),
+    yaxis = list(title = "Volatility (Standard Deviation)"),
+    legend = list(title = list(text = "Stock")),
+    shapes = event_lines
   )
 
 
 volatility_plot
 
+
 ```
 
+During the first half of 2020, coinciding with the onset of the COVID-19 pandemic, all three stocks—AAPL, MSFT, and TSLA—experienced a sharp rise in volatility, reflecting heightened market uncertainty. As vaccines became available in early 2021, volatility declined noticeably, suggesting a return of investor confidence. The beginning of the Russia–Ukraine war in early 2022 triggered another local peak in volatility across all three stocks, followed by a gradual decline as markets adjusted to the new geopolitical reality.
 
-Between 2019 and 2024, the 6-month volatility trends of AAPL, MSFT, and TSLA reveal how major global events impacted market stability. During the first half of 2020, at the onset of the COVID-19 pandemic, all three stocks experienced a significant increase in volatility, with TSLA showing the most pronounced spike. As vaccines became available in the first half of 2021, market confidence returned and volatility decreased notably across all three stocks.
+Up to this point, the volatility trajectories of AAPL, MSFT, and TSLA remained broadly aligned, showing similar patterns of reaction and stabilization. However, after the emergence of AI-driven market narratives in 2023, a divergence began to appear. While AAPL and MSFT continued on a more stable and declining volatility path, TSLA's volatility began to rise again—indicating a renewed period of elevated risk, possibly driven by speculation or sector-specific factors.
 
-In 2022, the outbreak of the Russia–Ukraine war and rising global inflation led to another wave of volatility, particularly affecting AAPL and TSLA, while MSFT remained relatively stable. By the first half of 2023, despite the surge in AI-driven market optimism, volatility declined further for AAPL and MSFT, whereas TSLA maintained a consistently higher risk profile.
+While volatility captures the fluctuations in returns, it does not reflect the magnitude of losses investors might endure. To address this limitation, we turn to the concept of Maximum Drawdown (MDD), MDD = (Trough Value - Peak Value) / Peak Value which measures the largest decline from a peak to a trough over the entire period. It reflects the most severe loss an investor could have faced.
 
-Throughout the period, MSFT exhibited the most stable and defensive behavior, AAPL responded moderately to global shifts, and TSLA stood out with the highest and most persistent volatility, reflecting its sensitivity to both macroeconomic shocks and speculative dynamics.
-
-While volatility captures the fluctuations in returns, it does not reflect the magnitude of losses investors might endure. To address this limitation, we turn to the concept of Maximum Drawdown (MDD), which measures the largest decline from a peak to a trough over the entire period. It reflects the most severe loss an investor could have faced.
-
-
+SOMETHING WRONG HERE
 ```{r echo=FALSE}
-mdd_aapl <- maxDrawdown(returns_aapl)
+mdd_aapl <- maxDrawdown(aapl_prices)
 mdd_msft <- maxDrawdown(returns_msft)
 mdd_tsla <- maxDrawdown(returns_tsla)
 
@@ -126,53 +144,41 @@ However, in finance, risk does not simply mean danger—it also represents oppor
 
 Two commonly used methods are the arithmetic mean return and the geometric mean return, each with its advantages and limitations. The appropriate method should be selected based on the purpose and context of the analysis.
 
-When looking at the returns for my investment portfolio, should I use arithmetic or geometric returns?
-
-And here’s the response we got from ChatGPT:
-
-When analyzing investment returns, both arithmetic and geometric returns have their uses, and it ultimately depends on the context and the purpose of your analysis.
 
 The arithmetic mean is calculated by adding up all daily or annual returns over a period and dividing the total by the number of observations. Due to its simplicity, it is widely used for short-term performance comparisons and return estimates.
 
 
 ```{r}
-grouped_data$HalfYear <- factor(grouped_data$HalfYear, levels = grouped_data$HalfYear)
 
-event_labels <- data.frame(
-  HalfYear = c("2020 H1", "2021 H1", "2022 H1", "2022 H2", "2023 H1"),
-  label = c("COVID", "Vaccine", "War", "Inflation", "AI")
-)
+return_plot <- plot_ly(data = grouped_data) %>%
+  add_trace(x = ~HalfYear, y = ~AAPL_Mean, name = "AAPL",
+            type = 'scatter', mode = 'lines+markers', line = list(color = 'blue')) %>%
+  add_trace(x = ~HalfYear, y = ~MSFT_Mean, name = "MSFT",
+            type = 'scatter', mode = 'lines+markers', line = list(color = 'orange')) %>%
+  add_trace(x = ~HalfYear, y = ~TSLA_Mean, name = "TSLA",
+            type = 'scatter', mode = 'lines+markers', line = list(color = 'green')) %>%
 
-return_plot <- ggplot(grouped_data, aes(x = HalfYear)) +
-  geom_line(aes(y = AAPL_Mean, color = "AAPL"), group = 1, size = 1) +
-  geom_line(aes(y = MSFT_Mean, color = "MSFT"), group = 2, size = 1) +
-  geom_line(aes(y = TSLA_Mean, color = "TSLA"), group = 3, size = 1) +
-  geom_point(aes(y = AAPL_Mean, color = "AAPL"), size = 2) +
-  geom_point(aes(y = MSFT_Mean, color = "MSFT"), size = 2) +
-  geom_point(aes(y = TSLA_Mean, color = "TSLA"), size = 2) +
-  geom_hline(yintercept = 0, linetype = "dotted", color = "black") +
-  geom_vline(
-    xintercept = which(grouped_data$HalfYear %in% event_labels$HalfYear),
-    linetype = "dashed", color = "red", size = 0.5
-  ) +
-  geom_text(
+  add_annotations(
     data = event_labels,
-    aes(x = HalfYear, y = 0, label = label),
-    inherit.aes = FALSE,
-    angle = 0, vjust = 1.5, hjust = 0.5,
-    color = "red", size = 3.5
-  ) +
-  labs(
-    title = "6-Month Average Returns by Stock with Key Events",
-    x = "Period (Half-Year)",
-    y = "Average Daily Return",
-    color = "Stock"
-  ) +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-  scale_y_continuous(labels = scales::percent)
+    x = ~HalfYear,
+    y = 0,
+    text = ~label,
+    showarrow = FALSE,
+    yanchor = "bottom",
+    font = list(color = "red", size = 12)
+  ) %>%
 
+  layout(
+    title = "6-Month Average Returns by Stock with Key Events",
+    xaxis = list(title = "Period (Half-Year)", tickangle = -45),
+    yaxis = list(title = "Average Daily Return", tickformat = ".1%"),
+    legend = list(title = list(text = "Stock")),
+    shapes = event_lines,
+    hovermode = "x unified"
+  )
 
 return_plot
+
 
 ```
 
@@ -183,8 +189,17 @@ When vaccines were developed, markets breathed a sigh of relief and stock prices
 Then came 2023—the rise of artificial intelligence. Microsoft stood out with its partnership with OpenAI. Tesla once again drew attention with its autonomous technologies. As always, Apple maintained its stability. Technology once again began to shape the future.
 
 ```{r}
-return_plot
-volatility_plot
+plot_ly() %>%
+  add_lines(data = grouped_data, x = ~HalfYear, y = ~AAPL_Mean, name = "AAPL Return", yaxis = "y1") %>%
+  add_lines(data = grouped_data, x = ~HalfYear, y = ~AAPL_SD, name = "AAPL Volatility", yaxis = "y2") %>%
+  layout(
+    title = "AAPL: Return vs. Volatility",
+    yaxis = list(title = "Average Return", tickformat = ".1%"),
+    yaxis2 = list(overlaying = "y", side = "right", title = "Volatility (SD)"),
+    xaxis = list(title = "Half-Year"),
+    legend = list(orientation = "h")
+  )
+
 ```
 When these two charts are examined side by side, they clearly demonstrate that the fundamental law of financial markets—the "risk-return relationship"—is being directly confirmed, especially in the context of technology stocks.
 
