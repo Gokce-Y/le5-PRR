@@ -217,25 +217,25 @@ By **2023**, Tesla had regained strength. As the broader market recovered, its r
 
 #	Does diversification reduce risk?
 
-* There is a well-known saying often attributed to economist Harry Markowitz, the father of Modern Portfolio Theory:
+There is a well-known saying often attributed to economist Harry Markowitz, the father of Modern Portfolio Theory:
 
   *“Diversification is the only free lunch in investing.”*
 
-* Or, as people like to put it more casually: “Don’t put all your eggs in one basket.”
+Or, as people like to put it more casually: “Don’t put all your eggs in one basket.”
 
-* Diversification means spreading investments across different assets to reduce exposure to the risk of any single investment.
+Diversification means spreading investments across different assets to reduce exposure to the risk of any single investment.
 
-* The basic idea is that not all assets move in the same direction at the same time.
+The basic idea is that not all assets move in the same direction at the same time.
 
-* By combining assets with different risk and return profiles, investors can potentially reduce the overall risk of their portfolio while maintaining reasonable return expectations.
+By combining assets with different risk and return profiles, investors can potentially reduce the overall risk of their portfolio while maintaining reasonable return expectations.
 
-* The goal of diversification is to reduce overall volatility and achieve a more balanced return by combining assets with low correlation.
+The goal of diversification is to reduce overall volatility and achieve a more balanced return by combining assets with low correlation.
 
-* Correlation analysis is conducted to identify which assets, when combined in a portfolio, will have a risk-reducing effect.
+Correlation analysis is conducted to identify which assets, when combined in a portfolio, will have a risk-reducing effect.
 
-* Low correlation reduces portfolio volatility.
+Low correlation reduces portfolio volatility.
 
-* High correlation increases portfolio volatility.
+High correlation increases portfolio volatility.
 
 
 ```{r echo=FALSE, message=TRUE}
@@ -256,15 +256,15 @@ print(cor_matrix)
 * TSLA – MSFT = 0.43  
   A moderate relationship. Sometimes they move similarly, but there is also a degree of independence.
 
-* We will use these results to build our portfolio diversification strategy.
+We will use these results to build our portfolio diversification strategy.
 
-* Assets with very high correlation (such as AAPL and MSFT) provide less diversification.
+Assets with very high correlation (such as AAPL and MSFT) provide less diversification.
 
-* Assets with moderate or low correlation (such as TSLA and AAPL or TSLA and MSFT) provide better diversification.
+Assets with moderate or low correlation (such as TSLA and AAPL or TSLA and MSFT) provide better diversification.
 
-* The goal is to determine whether the assets added to the portfolio balance each other or tend to move in the same direction.
+The goal is to determine whether the assets added to the portfolio balance each other or tend to move in the same direction.
 
-* Our hypothesis is as follows:
+## Our hypothesis :
 
   * **Low Risk / Stability Objective:**  
     A portfolio weighted 50% Microsoft and 50% Apple is expected to provide stable but limited returns due to its low volatility.
@@ -314,7 +314,7 @@ portfolio_analysis(c(0.00, 0.15, 0.85), returns, "Maximum Sharpe Ratio")
 * **Maximum Sharpe Portfolio (85% MSFT – 15% TSLA)**  
   Appears theoretically efficient, but does not outperform the balanced portfolio in practice.
 
-* **Recommendation**  
+## **Recommendation**  
   * We recommend the 50% MSFT – 30% AAPL – 20% TSLA allocation as the optimal choice for investors seeking a strong balance between risk and return, supported by the best Sharpe ratio.
   * For risk-averse investors, the 50% MSFT – 50% AAPL portfolio is suggested.
   * For aggressive investors, the 50% TSLA-weighted portfolio could be considered, acknowledging its higher volatility.
