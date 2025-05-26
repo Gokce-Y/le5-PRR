@@ -219,6 +219,8 @@ By **2023**, Tesla had regained strength. As the broader market recovered, its r
 
 There is a well-known saying often attributed to economist Harry Markowitz, the father of Modern Portfolio Theory:
 
+![Harry Markowitz](images/hary.png)
+
   *“Diversification is the only free lunch in investing.”*
 
 Or, as people like to put it more casually: “Don’t put all your eggs in one basket.”
@@ -314,7 +316,7 @@ portfolio_analysis(c(0.00, 0.15, 0.85), returns, "Maximum Sharpe Ratio")
 * **Maximum Sharpe Portfolio (85% MSFT – 15% TSLA)**  
   Appears theoretically efficient, but does not outperform the balanced portfolio in practice.
 
-## **Recommendation**  
+## Recommendation
   * We recommend the 50% MSFT – 30% AAPL – 20% TSLA allocation as the optimal choice for investors seeking a strong balance between risk and return, supported by the best Sharpe ratio.
   * For risk-averse investors, the 50% MSFT – 50% AAPL portfolio is suggested.
   * For aggressive investors, the 50% TSLA-weighted portfolio could be considered, acknowledging its higher volatility.
