@@ -1,9 +1,16 @@
 ---
-title: "R Notebook"
+title: "Financial Risk & Return Analysis"
+author: "Ivan and Yaren"
 output:
   html_document:
-    df_print: paged
+    toc: true
+    toc_float: true  
+    toc_depth: 3     
+    number_sections: true  
+    theme: readable    
 ---
+
+
 ```{r message=FALSE, warning=FALSE, include=FALSE}
 #install.packages("PerformanceAnalytics")
 library(quantmod)
@@ -30,23 +37,22 @@ aapl_prices <- na.omit(Ad(AAPL))
 ```
 
 
-
-
-• Which stock has the highest risk ?
+# Which Stock Has the Highest Risk?
 
 Volatility is a frequently encountered concept in the world of finance and holds great importance for investors. But what exactly is volatility? Volatility refers to the degree of fluctuation in the price of a financial asset. In other words, it describes how quickly and significantly the price of an asset changes. For investors, volatility can imply risk and uncertainty, but when managed with the right strategies, it can also present opportunities.
 
 In volatility, which measures the price fluctuations of an asset, sudden and large changes in stock prices indicate high volatility. On the other hand, low volatility means that prices are more stable and predictable. Volatility plays a critical role in helping investors determine their risk tolerance and adjust their portfolios accordingly.
 
-There are several ways to measure volatility, but the most common method is the calculation of standard deviation. Standard deviation indicates how much an asset’s return deviates from its average. A high standard deviation signifies high volatility, while a low standard deviation indicates low volatility.
+There are several ways to measure volatility, but the most common method is the calculation of **standard deviation**. Standard deviation indicates how much an asset’s return deviates from its average. A high standard deviation signifies high volatility, while a low standard deviation indicates low volatility.
 
 High volatility is often observed during periods of increased uncertainty and risk in the markets. During such times, prices can experience sudden and significant changes, which may amplify both potential gains and losses. Investors should closely monitor market movements during high-volatility periods and rebalance their portfolios if necessary. High volatility typically arises due to factors such as economic uncertainty, political events, natural disasters, or major company-specific developments.
 
-Our data spans from 2019 to 2024, a period marked by major global events that likely influenced market volatility. These include the COVID-19 pandemic (2020), vaccine-driven recovery (2021), the Russia-Ukraine war (2022), global inflation and interest rate hikes (2022–2023), the AI stock rally (2023), and political and economic uncertainty in 2024. These events should be considered when interpreting volatility and asset performance.
+Our data spans from **2019 to 2024**, a period marked by major global events that likely influenced market volatility. These include the **COVID-19 pandemic (2020)**, **vaccine-driven recovery (2021)**, the **Russia-Ukraine war (2022)**, **global inflation and interest rate hikes (2022–2023)**, the **AI stock rally (2023)**, and **political and economic uncertainty in 2024**. These events should be considered when interpreting volatility and asset performance.
 
-To examine these effects more closely, we will use the volatility graph. This will allow us to compare the daily return variability of Apple, Microsoft, and Tesla more accurately, and better understand how each stock responded to market events during the 2019–2024 period.
+To examine these effects more closely, we will use the volatility graph. This will allow us to compare the daily return variability of **Apple**, **Microsoft**, and **Tesla** more accurately, and better understand how each stock responded to market events during the **2019–2024** period.
 
-```{r}
+
+```{r echo=FALSE}
 returns_combined <- merge(returns_aapl, returns_msft, returns_tsla)
 colnames(returns_combined) <- c("AAPL", "MSFT", "TSLA")
 returns_df <- data.frame(Date = index(returns_combined),
@@ -65,7 +71,7 @@ grouped_data <- returns_df %>%
 
 
 
-```{r}
+```{r echo=FALSE}
 grouped_data$HalfYear <- factor(grouped_data$HalfYear, levels = grouped_data$HalfYear)
 
 event_labels <- data.frame(
@@ -88,7 +94,7 @@ event_lines <- lapply(event_labels$HalfYear, function(h) {
 ```
 
 
-```{r}
+```{r echo=FALSE}
 
 volatility_plot <- plot_ly(data = grouped_data) %>%
   add_trace(x = ~HalfYear, y = ~AAPL_SD, name = "AAPL", type = 'scatter', mode = 'lines+markers') %>%
@@ -121,6 +127,8 @@ During the first half of 2020, coinciding with the onset of the COVID-19 pandemi
 
 Up to this point, the volatility trajectories of AAPL, MSFT, and TSLA remained broadly aligned, showing similar patterns of reaction and stabilization. However, after the emergence of AI-driven market narratives in 2023, a divergence began to appear. While AAPL and MSFT continued on a more stable and declining volatility path, TSLA's volatility began to rise again—indicating a renewed period of elevated risk, possibly driven by speculation or sector-specific factors.
 
+## Maximum Drawdown
+
 While volatility captures the fluctuations in returns, it does not reflect the magnitude of losses investors might endure. To address this limitation, we turn to the concept of Maximum Drawdown (MDD), MDD = (Trough Value - Peak Value) / Peak Value which measures the largest decline from a peak to a trough over the entire period. It reflects the most severe loss an investor could have faced.
 
 SOMETHING WRONG HERE
@@ -138,17 +146,18 @@ The Maximum Drawdown results further confirm Tesla's high-risk profile. While Ap
 
 Historically, Tesla’s maximum drawdown has also been larger compared to Apple and Microsoft; according to one analysis, since 2010, Tesla stock has experienced a peak loss of around 61%, whereas Apple’s largest drawdown remained around 40%.
 
-However, in finance, risk does not simply mean danger—it also represents opportunity. Higher risk can imply greater return potential, which is why many investors are still attracted to stocks like TSLA despite their volatility and drawdown profiles.
+However, in finance, risk does not simply mean danger — it also represents opportunity. Higher risk can imply greater return potential, which is why many investors are still attracted to stocks like TSLA despite their volatility and drawdown profiles.
 
-•	Which stock had the highest average return?
+---
 
-Two commonly used methods are the arithmetic mean return and the geometric mean return, each with its advantages and limitations. The appropriate method should be selected based on the purpose and context of the analysis.
+# Which Stock Had the Highest Average Return?
 
+Two commonly used methods are the **arithmetic mean return** and the **geometric mean return**, each with its advantages and limitations. The appropriate method should be selected based on the purpose and context of the analysis.
 
 The arithmetic mean is calculated by adding up all daily or annual returns over a period and dividing the total by the number of observations. Due to its simplicity, it is widely used for short-term performance comparisons and return estimates.
 
 
-```{r}
+```{r echo=FALSE}
 
 return_plot <- plot_ly(data = grouped_data) %>%
   add_trace(x = ~HalfYear, y = ~AAPL_Mean, name = "AAPL",
@@ -182,44 +191,52 @@ return_plot
 
 ```
 
-At the beginning of 2020, when COVID-19 brought the entire world to a standstill, uncertainty prevailed. But technology responded swiftly. Remote work, digital services, and electric vehicles surged—and Tesla soared. Microsoft and Apple, on the other hand, offered investors confidence through more cautious but steady growth.
+## Technology, Crisis, and Recovery
 
-When vaccines were developed, markets breathed a sigh of relief and stock prices climbed. However, new threats soon emerged: war, supply chain issues, and inflation. The year 2022 became a period of decline for all tech stocks, prompting investors to act more cautiously once again.
+At the beginning of 2020, when COVID-19 brought the entire world to a standstill, uncertainty prevailed. But technology responded swiftly. Remote work, digital services, and electric vehicles surged — and **Tesla soared**. **Microsoft** and **Apple**, on the other hand, offered investors confidence through more cautious but steady growth.
 
-Then came 2023—the rise of artificial intelligence. Microsoft stood out with its partnership with OpenAI. Tesla once again drew attention with its autonomous technologies. As always, Apple maintained its stability. Technology once again began to shape the future.
+When vaccines were developed, markets breathed a sigh of relief and stock prices climbed. However, new threats soon emerged: **war**, **supply chain issues**, and **inflation**. The year **2022** became a period of decline for all tech stocks, prompting investors to act more cautiously once again.
 
-```{r}
-plot_ly() %>%
-  add_lines(data = grouped_data, x = ~HalfYear, y = ~AAPL_Mean, name = "AAPL Return", yaxis = "y1") %>%
-  add_lines(data = grouped_data, x = ~HalfYear, y = ~AAPL_SD, name = "AAPL Volatility", yaxis = "y2") %>%
-  layout(
-    title = "AAPL: Return vs. Volatility",
-    yaxis = list(title = "Average Return", tickformat = ".1%"),
-    yaxis2 = list(overlaying = "y", side = "right", title = "Volatility (SD)"),
-    xaxis = list(title = "Half-Year"),
-    legend = list(orientation = "h")
-  )
+Then came **2023** — the rise of **artificial intelligence**. Microsoft stood out with its partnership with OpenAI. Tesla once again drew attention with its autonomous technologies. As always, Apple maintained its stability. Technology once again began to shape the future.
 
-```
-When these two charts are examined side by side, they clearly demonstrate that the fundamental law of financial markets—the "risk-return relationship"—is being directly confirmed, especially in the context of technology stocks.
+---
+
+## Risk–Return Trade-off
+
+While **Apple** and **Microsoft** have maintained a more stable and balanced return profile throughout the period, **Tesla** has recorded both the highest and lowest returns in different time frames. These sharp fluctuations make Tesla the most illustrative example for understanding the relationship between **risk and return**.
+
+In the first half of **2020**, as the pandemic shook global markets, Tesla experienced a remarkable surge. Both its **volatility** and **returns** peaked. This was one of those periods where taking risk clearly paid off.
+
+However, the same relationship did not always hold. In the first half of **2022**, amidst geopolitical tensions and economic uncertainty, Tesla once again showed **high volatility** — but this time, **returns turned negative**. In other words, the same level of risk resulted in a loss instead of a gain.
+
+By **2023**, Tesla had regained strength. As the broader market recovered, its returns began to rise again. Taken together, these periods demonstrate that **volatility** can signal not only **potential gains**, but also the **risk of significant losses**.
+
+
 
 ---------------------------------------
 
-•	Does diversification reduce risk?
+#	Does diversification reduce risk?
 
-There is a well-known saying often attributed to economist Harry Markowitz, the father of Modern Portfolio Theory:
+* There is a well-known saying often attributed to economist Harry Markowitz, the father of Modern Portfolio Theory:
 
-“Diversification is the only free lunch in investing.”
+  *“Diversification is the only free lunch in investing.”*
 
-Or, as people like to put it more casually: “Don’t put all your eggs in one basket.”
+* Or, as people like to put it more casually: “Don’t put all your eggs in one basket.”
 
-Diversification means spreading investments across different assets to reduce exposure to the risk of any single investment. The basic idea is that not all assets move in the same direction at the same time. By combining assets with different risk and return profiles, investors can potentially reduce the overall risk of their portfolio while maintaining reasonable return expectations.
+* Diversification means spreading investments across different assets to reduce exposure to the risk of any single investment.
 
-The goal of diversification is to reduce overall volatility and achieve a more balanced return by combining assets with low correlation.
-Correlation analysis is conducted to identify which assets, when combined in a portfolio, will have a risk-reducing effect.
+* The basic idea is that not all assets move in the same direction at the same time.
 
-Low correlation reduces portfolio volatility.
-High correlation increases portfolio volatility.
+* By combining assets with different risk and return profiles, investors can potentially reduce the overall risk of their portfolio while maintaining reasonable return expectations.
+
+* The goal of diversification is to reduce overall volatility and achieve a more balanced return by combining assets with low correlation.
+
+* Correlation analysis is conducted to identify which assets, when combined in a portfolio, will have a risk-reducing effect.
+
+* Low correlation reduces portfolio volatility.
+
+* High correlation increases portfolio volatility.
+
 
 ```{r echo=FALSE, message=TRUE}
 prices <- merge(Cl(AAPL), Cl(TSLA), Cl(MSFT))
@@ -230,37 +247,39 @@ print(cor_matrix)
 
 ```
 
-AAPL – TSLA = 0.47
-A moderate positive relationship. Sometimes they move together, sometimes they don’t.
+* AAPL – TSLA = 0.47  
+  A moderate positive relationship. Sometimes they move together, sometimes they don’t.
 
-AAPL – MSFT = 0.73
-A strong positive relationship. They generally move in the same direction.
+* AAPL – MSFT = 0.73  
+  A strong positive relationship. They generally move in the same direction.
 
-TSLA – MSFT = 0.43
-A moderate relationship. Sometimes they move similarly, but there is also a degree of independence.
+* TSLA – MSFT = 0.43  
+  A moderate relationship. Sometimes they move similarly, but there is also a degree of independence.
 
-We will use these results to build our portfolio diversification strategy.
-Assets with very high correlation (such as AAPL and MSFT) provide less diversification.
+* We will use these results to build our portfolio diversification strategy.
 
-Assets with moderate or low correlation (such as TSLA and AAPL or TSLA and MSFT) provide better diversification.
+* Assets with very high correlation (such as AAPL and MSFT) provide less diversification.
 
-The goal is to determine whether the assets added to the portfolio balance each other or tend to move in the same direction.
+* Assets with moderate or low correlation (such as TSLA and AAPL or TSLA and MSFT) provide better diversification.
 
-Our hypothesis is as follows:
+* The goal is to determine whether the assets added to the portfolio balance each other or tend to move in the same direction.
 
-Low Risk / Stability Objective:
-A portfolio weighted 50% Microsoft and 50% Apple is expected to provide stable but limited returns due to its low volatility.
+* Our hypothesis is as follows:
 
-Balanced Risk / Return Objective:
-A portfolio weighted 50% Microsoft, 30% Apple, and 20% Tesla is expected to offer moderate returns with an acceptable level of risk.
+  * **Low Risk / Stability Objective:**  
+    A portfolio weighted 50% Microsoft and 50% Apple is expected to provide stable but limited returns due to its low volatility.
 
-High Return / High Risk Objective:
-A portfolio weighted 50% Tesla, 25% Apple, and 25% Microsoft is expected to deliver the highest potential returns, despite higher volatility.
+  * **Balanced Risk / Return Objective:**  
+    A portfolio weighted 50% Microsoft, 30% Apple, and 20% Tesla is expected to offer moderate returns with an acceptable level of risk.
 
-Maximum Sharpe Ratio Objective:
-A portfolio weighted 85% Microsoft and 15% Tesla is expected to provide the highest return per unit of risk, maximizing the Sharpe Ratio.
+  * **High Return / High Risk Objective:**  
+    A portfolio weighted 50% Tesla, 25% Apple, and 25% Microsoft is expected to deliver the highest potential returns, despite higher volatility.
 
-```{r}
+  * **Maximum Sharpe Ratio Objective:**  
+    A portfolio weighted 85% Microsoft and 15% Tesla is expected to provide the highest return per unit of risk, maximizing the Sharpe Ratio.
+
+
+```{r echo=FALSE}
 portfolio_analysis <- function(weights, returns, name) {
   mean_ret <- colMeans(returns) * 252
   cov_matrix <- cov(returns) * 252
@@ -282,26 +301,24 @@ portfolio_analysis(c(0.00, 0.15, 0.85), returns, "Maximum Sharpe Ratio")
 
 ```
 
-Balanced Portfolio (50% MSFT – 30% AAPL – 20% TSLA)
-Achieved the highest Sharpe ratio of 1.28, with an annual return of 39% and volatility of 30.5%. This represents the best balance between risk and return.
+* **Balanced Portfolio (50% MSFT – 30% AAPL – 20% TSLA)**  
+  Achieved the highest Sharpe ratio of 1.28, with an annual return of 39% and volatility of 30.5%.  
+  This represents the best balance between risk and return.
 
-Low-Risk Portfolio (50% MSFT – 50% AAPL)
-Stands out as the least risky option, offering a 32% annual return with relatively low volatility.
+* **Low-Risk Portfolio (50% MSFT – 50% AAPL)**  
+  Stands out as the least risky option, offering a 32% annual return with relatively low volatility.
 
-High-Return Portfolio (50% TSLA – 25% AAPL – 25% MSFT)
-Provides the highest potential return of 51.5% annually, but comes with high volatility of 40.8%, making it susceptible to significant fluctuations.
+* **High-Return Portfolio (50% TSLA – 25% AAPL – 25% MSFT)**  
+  Provides the highest potential return of 51.5% annually, but comes with high volatility of 40.8%, making it susceptible to significant fluctuations.
 
-Maximum Sharpe Portfolio (85% MSFT – 15% TSLA)
-Appears theoretically efficient, but does not outperform the balanced portfolio in practice.
+* **Maximum Sharpe Portfolio (85% MSFT – 15% TSLA)**  
+  Appears theoretically efficient, but does not outperform the balanced portfolio in practice.
 
-Recommendation
-We recommend the 50% MSFT – 30% AAPL – 20% TSLA allocation as the optimal choice for investors seeking a strong balance between risk and return, supported by the best Sharpe ratio.
-
-For risk-averse investors, the 50% MSFT – 50% AAPL portfolio is suggested.
-
-For aggressive investors, the 50% TSLA-weighted portfolio could be considered, acknowledging its higher volatility.
-
-To better manage overall portfolio risk, reducing the weight of Tesla could be considered, while keeping Apple and Microsoft as stabilizing components to maintain diversification benefits.
+* **Recommendation**  
+  * We recommend the 50% MSFT – 30% AAPL – 20% TSLA allocation as the optimal choice for investors seeking a strong balance between risk and return, supported by the best Sharpe ratio.
+  * For risk-averse investors, the 50% MSFT – 50% AAPL portfolio is suggested.
+  * For aggressive investors, the 50% TSLA-weighted portfolio could be considered, acknowledging its higher volatility.
+  * To better manage overall portfolio risk, reducing the weight of Tesla could be considered, while keeping Apple and Microsoft as stabilizing components to maintain diversification benefits.
 
 
 
@@ -313,7 +330,7 @@ To better manage overall portfolio risk, reducing the weight of Tesla could be c
 We can prove this by calculating standard deviation both for diversified investment and single one and compare them. As we know, standard deviation considered to be a "Risk Marker", so we expect diversified portfolio to have lower standard deviation score.
 
 
-```{r}
+```{r echo=FALSE}
 
 portfolio_returns <- (returns_aapl + returns_msft + returns_tsla) / 3
 
@@ -340,28 +357,6 @@ Is simple terms, as we want our portfolio to grow, we can invest in risky assets
 Let me demonstrate it, using the following chart:
 
 
-```{r}
-
-mean_portfolio <- mean(portfolio_returns)
-sd_portfolio <- sd(portfolio_returns)
-
-metrics <- data.frame(
-  Asset = c("Apple", "Microsoft", "Tesla", "Diversified Portfolio"),
-  Mean_Return = c(mean_return_aapl, mean_return_msft, mean_return_tsla, mean_portfolio),
-  Standard_Deviation = c(sd_aapl, sd_msft, sd_tsla, sd_portfolio)
-)
-
-print(metrics)
-
-plot(metrics$Standard_Deviation, metrics$Mean_Return,
-     xlab = "Risk (Standard Deviation)",
-     ylab = "Return (Mean Daily Return)",
-     main = "Risk-Return Comparison",
-     pch = 19, col = c("blue", "green", "red", "black"),
-     xlim = c(0, max(metrics$Standard_Deviation) * 1.1),
-     ylim = c(0, max(metrics$Mean_Return) * 1.1))
-text(metrics$Standard_Deviation, metrics$Mean_Return, labels = metrics$Asset, pos = 4)
-```
 The Risk-Return Comparison chart illustrates how diversification helps to balance risk and return.
 
 We can see that Tesla provides the highest average return (0.28%) but comes with the highest risk (4.06% standard deviation). On the other hand, Apple and Microsoft offer lower risk (around 1.8–1.9%) but also lower returns (around 0.11–0.14%).
@@ -376,7 +371,7 @@ To strengthen the analysis, we conducted two additional statistical tests:
 	•	T-Test: This test was used to check whether the difference in returns between Tesla and Apple is statistically significant. The results confirmed that Tesla’s returns are not significantly higher than Apple’s, with a p-value above 0.05, supporting the conclusion that Tesla offers nearly same potential returns but at a higher risk.(Askim, please check. Maybe I calculated it wrong. It shouldn't be the same)
 	
 	
-```{r}
+```{r echo=FALSE}
 t_test_result <- t.test(as.vector(returns_tsla), as.vector(returns_aapl))
 print(t_test_result)
 ```
