@@ -125,7 +125,7 @@ While volatility captures the fluctuations in returns, it does not reflect the m
 
 SOMETHING WRONG HERE
 ```{r echo=FALSE}
-mdd_aapl <- maxDrawdown(aapl_prices)
+mdd_aapl <- maxDrawdown(returns_aapl)
 mdd_msft <- maxDrawdown(returns_msft)
 mdd_tsla <- maxDrawdown(returns_tsla)
 
@@ -401,10 +401,9 @@ print(t_test_result)
 	•	Linear Regression: A regression analysis between Tesla’s returns and the diversified portfolio’s returns revealed a positive relationship. This indicates that Tesla’s performance has a measurable influence on the portfolio’s overall return, contributing to both its higher return and higher volatility. This supports the idea that adding a riskier asset like Tesla can boost portfolio performance while still maintaining a balanced risk profile thanks to diversification.
 	
 ```{r}
-# Линейная регрессия доходности Tesla против доходности портфеля
+
 regression_model <- lm(returns_tsla ~ portfolio_returns)
 
-# Вывод результата
 summary(regression_model)
 ```
 
