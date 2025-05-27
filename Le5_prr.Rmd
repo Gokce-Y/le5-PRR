@@ -210,14 +210,6 @@ mdd_aapl <- maxDrawdown(returns_aapl, invert = FALSE)
 mdd_msft <- maxDrawdown(returns_msft, invert = FALSE)
 mdd_tsla <- maxDrawdown(returns_tsla, invert = FALSE)
 
-<<<<<<< HEAD
-SOMETHING WRONG HERE
-```{r echo=FALSE}
-mdd_aapl <- maxDrawdown(returns_aapl)
-mdd_msft <- maxDrawdown(returns_msft)
-mdd_tsla <- maxDrawdown(returns_tsla)
-=======
->>>>>>> 7baa504e712ca97dc4cb8a1735459af7d2a5de61
 
 cat("Maximum Drawdown of AAPL:", mdd_aapl, "\n")
 cat("Maximum Drawdown of MSFT:", mdd_msft, "\n")
