@@ -30,8 +30,8 @@ getSymbols(symbols, src = "yahoo", from = "2019-01-01", to = "2024-12-31")
 ```
 
 # Introduction
-
-Let’s be honest—when it comes to investing, we’ve all wondered:  
+There comes a moment in life when we realize the importance of building lasting wealth, not just for our own security, but to create something meaningful for future generations. One of the most common paths to achieving this goal is through investment. And for many, that means stepping into the world of the stock market. 
+But then the question arises:
 
 <div style="background-color:#f9f9f9; border-left:4px solid #FF6F61; padding:12px; font-style:italic; font-size:1.1em;">
 Should I put all my money into one strong stock, or is it smarter to diversify and spread the risk?
@@ -44,18 +44,19 @@ Or maybe you haven’t even asked that question yet—because you’re just gett
 
 
 That’s exactly where this beginner-friendly analysis comes in.  
-Using three of the most well-known companies—**Apple, Microsoft, and Tesla**—we’ve created a simple roadmap for anyone who’s looking to take their first steps into the stock market or just wants to better understand how it all works.
+Using three of the most well-known companies—**Apple, Microsoft, and Tesla**—we’ve created a simple roadmap for anyone who’s looking to take their first steps into the stock market or just wants to better understand how it works.
 
 
 Before we dive in, let’s quickly go over how we’re calculating returns in this project. We’re using adjusted closing prices, because they reflect the real picture—they factor in things like dividends, stock splits, and other corporate changes. That way, we’re not fooled by artificial jumps or drops in price, and we can focus on what really matters: actual market movement.
 
-From there, we calculate the daily return, which is just the change in price from one trading day to the next. It’s a simple but powerful way to track how a stock performs over time, spot volatility, and get a better sense of how efficient a portfolio really is.
+From there,to start, we calculate the daily return, which is just the change in price from one trading day to the next. It’s a simple but powerful way to track how a stock performs over time, spot volatility, and get a better sense of how efficient a portfolio really is.
 
 
 ```{r include=FALSE}
 returns_aapl <- dailyReturn(Ad(AAPL))
 returns_msft <- dailyReturn(Ad(MSFT))
 returns_tsla <- dailyReturn(Ad(TSLA))
+
 ```
 
 ---
@@ -270,7 +271,7 @@ In this analysis, we’ll use the arithmetic mean because our focus is on compar
 
 ### Visualization: Average Returns Over Time
 
-If you’ve followed along so far  great! Let’s keep going.
+If you’ve followed along so far great! Let’s keep going.
 
 In the previous section, we mentioned that risk can also lead to reward. So after seeing Tesla’s extreme volatility and massive drawdowns, you might be thinking:
 
