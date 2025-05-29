@@ -1,6 +1,6 @@
 ---
-title: "Financial Risk & Return Analysis"
-author: "Ivan and Yaren"
+title: "Stock Market Analysis"
+author: "Yaren Demir and Ivan Halka"
 output:
   html_document:
     toc: true
@@ -8,12 +8,20 @@ output:
     toc_depth: 3
     number_sections: false
     theme: cerulean
+  pdf_document:
+    toc: true
+    toc_depth: '3'
+editor_options: 
+  markdown: 
+    wrap: sentence
 ---
-
-
 
 ```{r message=FALSE, warning=FALSE, include=FALSE}
 #install.packages("PerformanceAnalytics")
+#install.packages("renv")
+#install.packages("corrplot")
+#install.packages("keras")
+#install.packages("tensorrflow")
 library(quantmod)
 library(PerformanceAnalytics)
 library(ggplot2)
@@ -21,92 +29,198 @@ library(dplyr)
 library(lubridate)
 library(scales)
 library(plotly)
-```
-
-
-```{r include=FALSE}
-symbols <- c("AAPL", "MSFT", "TSLA")
-getSymbols(symbols, src = "yahoo", from = "2019-01-01", to = "2024-12-31")
+library(corrplot)
 ```
 
 # Introduction
+<<<<<<< HEAD
 
-Let’s be honest—when it comes to investing, we’ve all wondered:  
+Let’s be honest—when it comes to investing, most of us have asked ourselves:
+=======
+There comes a moment in life when we realize the importance of building lasting wealth, not just for our own security, but to create something meaningful for future generations. One of the most common paths to achieving this goal is through investment. And for many, that means stepping into the world of the stock market. 
+But then the question arises:
+>>>>>>> fd88e29948bf8f55e7b636db07cf50af995901df
 
-<div style="background-color:#f9f9f9; border-left:4px solid #FF6F61; padding:12px; font-style:italic; font-size:1.1em;">
-Should I put all my money into one strong stock, or is it smarter to diversify and spread the risk?
-</div>
+::: {style="background-color:#f9f9f9; border-left:4px solid #FF6F61; padding:12px; font-style:italic; font-size:1.1em;"}
+Should I go all in on a single high-performing stock, or play it safe by spreading the risk?
+:::
 
+Or maybe that question hasn’t crossed your mind yet—because you’re just starting out.
 
-<div style="margin-top:20px;"></div>
+We’re taking a deep dive into stock market data, focusing on three major tech giants: Apple, Tesla, and Microsoft.
+We’ll uncover trends, visualize performance, and break down how to assess stock risk using historical data.
 
-Or maybe you haven’t even asked that question yet—because you’re just getting started.
+Here’s what we’re exploring:
 
+- How has the stock price changed over time?
+- How do we calculate volatility?
+- What is the average daily return of the stock?
+- What is the correlation between different stocks?
+- How much value is at risk when investing in a stock?
+- How can we build a diversified stock portfolio?
 
+<<<<<<< HEAD
+We will answer these questions using R Studio.
+=======
 That’s exactly where this beginner-friendly analysis comes in.  
-Using three of the most well-known companies—**Apple, Microsoft, and Tesla**—we’ve created a simple roadmap for anyone who’s looking to take their first steps into the stock market or just wants to better understand how it all works.
+Using three of the most well-known companies—**Apple, Microsoft, and Tesla**—we’ve created a simple roadmap for anyone who’s looking to take their first steps into the stock market or just wants to better understand how it works.
+>>>>>>> fd88e29948bf8f55e7b636db07cf50af995901df
+
+### Getting the Data from Yahoo Finance
+
+First we have to get the data.
+Yahoo Finance is a rich resource of financial market data and tools to find compelling investments.
+To get the data we use In R, there is quantmod.
+Quantmod does not require any credentials or authorization, so we are able to hop right into getting our data.
+
+<<<<<<< HEAD
+```{r include=FALSE}
+symbols <- c("AAPL", "MSFT", "TSLA")
+# From there, we can combine that information with the getSymbols function:
+getSymbols(symbols, src = "yahoo", from = "2019-01-01", to = "2024-12-31")
+```
+
+Now that we have the data we can start.
 
 
-Before we dive in, let’s quickly go over how we’re calculating returns in this project. We’re using adjusted closing prices, because they reflect the real picture—they factor in things like dividends, stock splits, and other corporate changes. That way, we’re not fooled by artificial jumps or drops in price, and we can focus on what really matters: actual market movement.
+```{r include=FALSE}
+aapl_df <- data.frame(date = index(AAPL), coredata(AAPL)) |>
+  select(date, AAPL.Adjusted)
 
-From there, we calculate the daily return, which is just the change in price from one trading day to the next. It’s a simple but powerful way to track how a stock performs over time, spot volatility, and get a better sense of how efficient a portfolio really is.
+tsla_df <- data.frame(date = index(TSLA), coredata(TSLA)) |>
+  select(date, TSLA.Adjusted)
+
+msft_df <- data.frame(date = index(MSFT), coredata(MSFT)) |>
+  select(date, MSFT.Adjusted)
+
+merged_df <- aapl_df |>
+  full_join(tsla_df, by = "date") |>
+  full_join(msft_df, by = "date")
+=======
+From there,to start, we calculate the daily return, which is just the change in price from one trading day to the next. It’s a simple but powerful way to track how a stock performs over time, spot volatility, and get a better sense of how efficient a portfolio really is.
 
 
 ```{r include=FALSE}
 returns_aapl <- dailyReturn(Ad(AAPL))
 returns_msft <- dailyReturn(Ad(MSFT))
 returns_tsla <- dailyReturn(Ad(TSLA))
+>>>>>>> fd88e29948bf8f55e7b636db07cf50af995901df
+
 ```
 
----
+### How has the stock price changed over time?
 
+```{r echo=FALSE}
+create_stock_plot <- function(data, y_col, title_text) {
+  plot_ly(
+    data = data,
+    x = ~date,
+    y = as.formula(paste0("~", y_col)),
+    type = 'scatter',
+    mode = 'lines',
+    name = title_text
+  ) %>%
+    layout(
+      title = paste0(title_text, " – Adjusted Closing Price"),
+      xaxis = list(title = "Date"),
+      yaxis = list(title = "Adjusted Close Price (USD)"),
+      showlegend = FALSE
+    )
+}
 
+p1 <- create_stock_plot(aapl_df, "AAPL.Adjusted", "Apple Inc. (AAPL)")
+p2 <- create_stock_plot(tsla_df, "TSLA.Adjusted", "Tesla Inc. (TSLA)")
+p3 <- create_stock_plot(msft_df, "MSFT.Adjusted", "Microsoft Corp. (MSFT)")
+
+p1
+p2
+p3
+
+```
 
 # Which Stock Has the Highest Risk?
 
 **"When you're just starting to invest, one of the first questions you're likely to ask is: 'How risky is this stock?' Because let’s face it—risk is just as much a part of the game as reward."**
 
-### Understanding Volatility
+## Understanding Volatility
 
-Volatility is a frequently encountered concept in the world of finance and holds great importance for investors.  
-**But what exactly is volatility?**
-
-Volatility refers to the degree of fluctuation in the price of a financial asset.  
+Volatility is a frequently encountered concept in the world of finance and holds great importance for investors.\
+**But what exactly is volatility?** Volatility refers to the degree of fluctuation in the price of a financial asset.\
 In other words, it describes how quickly and significantly the price of an asset changes.
 
-For investors, volatility can imply risk and uncertainty. However, when managed with the right strategies, it can also present opportunities.
+In order to analyze the risk of the stock we'll need to take a closer look at the daily changes of the stock, and not just its absolute value.
+we calculate the daily return, which is just the change in price from one trading day to the next.
+It’s a simple but powerful way to track how a stock performs over time, spot volatility, and get a better sense of how efficient a portfolio really is.
 
-<div style="margin-top: 1em; background-color: #f9f9f9; padding: 10px; border-left: 4px solid #007acc;">
-Volatility isn't always bad — it's a sign that the market is moving. Smart investors learn how to ride those waves rather than fear them.
+```{r include=FALSE}
+returns_aapl <- dailyReturn(Ad(AAPL))
+returns_msft <- dailyReturn(Ad(MSFT))
+returns_tsla <- dailyReturn(Ad(TSLA))
 
-</div>
-<div style="margin-top:20px;"></div>
-<div style="background-color:#f9f9f9; padding:12px; border-left:4px solid #2196F3;">
-<strong>Volatility matters</strong> because it helps investors align their portfolios with their personal risk tolerance.
+returns_df <- merge(
+  "AAPL" = returns_aapl,
+  "MSFT" = returns_msft,
+  "TSLA" = returns_tsla
+)
+```
 
-</div>
-<div style="margin-top:20px;"></div>
 
-There are several ways to measure volatility, but the most common method is the calculation of **standard deviation**. Standard deviation indicates how much an asset’s return deviates from its average. A high standard deviation signifies high volatility, while a low standard deviation indicates low volatility.
+The line chart allows us to examine the time series behavior of daily returns for the three selected assets.
+
+```{r}
+plot_daily_return <- function(return_xts, ticker, line_color = "blue") {
+  plot_ly() %>%
+    add_lines(
+      x = ~index(return_xts),
+      y = ~coredata(return_xts),
+      name = ticker,
+      line = list(color = line_color)
+    ) %>%
+    layout(
+      xaxis = list(title = "Date"),
+      yaxis = list(
+        title = sprintf("Daily Return of %s", ticker),
+        titlefont = list(size = 10)),
+      legend = list(x = 0.1, y = 0.9)
+    )
+}
+
+p1 <- plot_daily_return(returns_aapl, "AAPL", "green")
+p2 <- plot_daily_return(returns_msft, "MSFT", "blue")
+p3 <- plot_daily_return(returns_tsla, "TSLA", "red")
+
+p1
+p2
+p3
+
+```
+
+
+
+
+
+At first glance, one thing stands out: Tesla (TSLA) is far more volatile than Apple (AAPL) and Microsoft (MSFT).
+While AAPL and MSFT tend to show steady, predictable price movements, TSLA swings much more aggressively from day to day.
+This kind of behavior points to Tesla being a more speculative and higher-risk stock.
+
+But how can we move beyond visual impressions and quantify this difference in volatility?
+
+There are several ways to measure volatility, but the most common method is the calculation of **standard deviation**.
+Standard deviation indicates how much an asset’s return deviates from its average.
+A high standard deviation signifies high volatility, while a low standard deviation indicates low volatility.
 
 Markets tend to get turbulent during uncertain times — whether it’s due to political unrest, economic shifts, natural disasters, or unexpected company news.
-In such periods, stock prices can swing sharply, creating both big risks and big opportunities.
+In such periods, stock prices can swing sharply, creating both big risks and big opportunities or losses.
 
-That’s why it’s important for investors to stay alert, follow the news, and adjust their portfolios if things start to move too fast or feel out of balance.
-
-The period from 2019 to 2024 was anything but ordinary. From the COVID-19 outbreak and the vaccine rollout, to the war in Ukraine, rising inflation, and the recent AI-driven stock surge, markets have been shaped by one major event after another.
-
-Understanding these shifts helps put volatility into perspective — because behind every price movement, there’s usually a story worth knowing.
+The period from 2019 to 2024 was anything but ordinary.
+From the COVID-19 outbreak and the vaccine rollout, to the war in Ukraine, rising inflation, and the recent AI-driven stock surge, markets have been shaped by one major event after another.
 
 ### Visualization: Volatility Over Time
 
-
-To better understand how each company reacted to key market events, we’ll take a closer look at the volatility graph. 
-
-When we first looked into how volatility is typically measured, we noticed that many existing graphs and models appeared overly complex and hard to interpret.
 To keep our analysis clear and accessible, we decided to use a simpler method — grouping adjusted daily returns into half-year periods and calculating the standard deviation for each group.
 
-<div style="margin-top:20px;"></div>
+::: {style="margin-top:20px;"}
+:::
 
 ```{r echo=FALSE}
 returns_combined <- merge(returns_aapl, returns_msft, returns_tsla)
@@ -124,8 +238,6 @@ grouped_data <- returns_df %>%
 
 
 ```
-
-
 
 ```{r echo=FALSE}
 grouped_data$HalfYear <- factor(grouped_data$HalfYear, levels = grouped_data$HalfYear)
@@ -148,7 +260,6 @@ event_lines <- lapply(event_labels$HalfYear, function(h) {
   )
 })
 ```
-
 
 ```{r echo=FALSE}
 
@@ -183,77 +294,20 @@ The results we got from the graph are pretty clear — and honestly, just what w
 In the first half of 2020, when COVID-19 hit, volatility for Apple, Microsoft, and Tesla spiked sharply as uncertainty flooded the markets.
 Then, in early 2021, as vaccines rolled out, things began to calm down — a sign that investor confidence was coming back.
 
-In early 2022, the Russia–Ukraine war caused another jump in volatility. But again, over time, markets adjusted, and the fluctuations began to settle.
+In early 2022, the Russia–Ukraine war caused another jump in volatility.
+But again, over time, markets adjusted, and the fluctuations began to settle.
 
 Up until that point, all three stocks were moving in sync — reacting to major events in similar ways and then stabilizing.
-But in 2023, things started to shift. With the rise of AI hype, Tesla began to stand out.
+But in 2023, things started to shift.
+With the rise of AI hype, Tesla began to stand out.
 While Apple and Microsoft stayed on a smoother, more stable path, Tesla’s volatility crept up again — likely driven by speculation or excitement specific to the tech sector.
 
-### Maximum Drawdown
-
-While volatility tells us how much returns fluctuate, it doesn’t show how deep the losses can actually go.
-That’s where Maximum Drawdown (MDD) comes in:
-
-<div style="background-color:#fafafa; border:1px solid #ddd; padding:10px; border-radius:6px; width:450px; text-align:center; box-shadow: 1px 1px 5px rgba(0,0,0,0.05); margin: 20px auto;">
-  <img src="images/mdd.png" alt="MDD Formula" style="max-width:100%; height:auto;">
-</div>
-
-
-MDD measures the biggest drop from a peak to a trough over the entire period — in other words, the worst-case scenario an investor could have faced.
-
-And considering how volatile Tesla has been, it wouldn’t be surprising if it also had the highest drawdown among the three stocks.
-
-```{r include=FALSE}
-# This function comes from the PerformanceAnalytics package and measures the largest loss
-
-mdd_aapl <- maxDrawdown(returns_aapl, invert = FALSE)
-mdd_msft <- maxDrawdown(returns_msft, invert = FALSE)
-mdd_tsla <- maxDrawdown(returns_tsla, invert = FALSE)
-
-
-cat("Maximum Drawdown of AAPL:", mdd_aapl, "\n")
-cat("Maximum Drawdown of MSFT:", mdd_msft, "\n")
-cat("Maximum Drawdown of TSLA:", mdd_tsla, "\n")
-```
-
-
-<table style="border-collapse: collapse; margin: 30px auto; font-size: 1em; text-align: center; box-shadow: 1px 1px 6px rgba(0,0,0,0.05); max-width: 600px;">
-  <thead>
-    <tr style="background-color: #f0f0f0;">
-      <th style="border: 1px solid #ccc; padding: 10px 16px;">Stock</th>
-      <th style="border: 1px solid #ccc; padding: 10px 16px;">Maximum Drawdown</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td style="border: 1px solid #ccc; padding: 8px;">AAPL</td>
-      <td style="border: 1px solid #ccc; padding: 8px;">-0.3143</td>
-    </tr>
-    <tr>
-      <td style="border: 1px solid #ccc; padding: 8px;">MSFT</td>
-      <td style="border: 1px solid #ccc; padding: 8px;">-0.3715</td>
-    </tr>
-    <tr>
-      <td style="border: 1px solid #ccc; padding: 8px;">TSLA</td>
-      <td style="border: 1px solid #ccc; padding: 8px;">-0.7363</td>
-    </tr>
-  </tbody>
-</table>
-
-
-The Maximum Drawdown results back up what we’ve already seen: Tesla carries a much higher level of risk.
-While Apple and Microsoft saw drawdowns of about 31% and 37%, Tesla's drawdown was over 73% — a huge difference.
-This means that in the worst-case scenario, Tesla investors could have lost more than two-thirds of their investment value — showing just how sensitive the stock is to major downturns.
-
-This isn’t new for Tesla. Looking further back, one analysis shows that since 2010, Tesla has faced a 61% peak loss, while Apple never dropped more than 40% in the same period.
-
-Yes, Tesla’s ups and downs are bigger, but that’s also part of what makes it appealing. Higher risk often comes with the chance for higher returns — and for many investors, that’s a risk worth taking.
+Yes, Tesla’s ups and downs are bigger, but that’s also part of what makes it appealing.
+Higher risk often comes with the chance for higher returns — and for many investors, that’s a risk worth taking.
 
 In the following section, we’ll take a closer look at how each stock actually performed.
 
----
-
-# Which Stock Had the Highest Average Return?
+# Average daily return of the stock
 
 ### Arithmetic Mean Return and Geometric Mean Return
 
@@ -266,21 +320,25 @@ Because it's simple and easy to interpret, it's often used for short-term perfor
 
 In this analysis, we’ll use the arithmetic mean because our focus is on comparing the average performance of each stock over specific time intervals, rather than modeling long-term compounded growth.
 
----
+------------------------------------------------------------------------
 
 ### Visualization: Average Returns Over Time
 
-If you’ve followed along so far  great! Let’s keep going.
+<<<<<<< HEAD
+In the previous section, we mentioned that risk can also lead to reward.
+So after seeing Tesla’s extreme volatility, you might be thinking:
+=======
+If you’ve followed along so far great! Let’s keep going.
 
 In the previous section, we mentioned that risk can also lead to reward. So after seeing Tesla’s extreme volatility and massive drawdowns, you might be thinking:
+>>>>>>> fd88e29948bf8f55e7b636db07cf50af995901df
 
 ***"Well, with all that risk, I hope the returns are worth it!"***
 
+Let’s find out by grouping adjusted daily returns into half-year periods — using the same method we applied for volatility.
 
-Let’s find out — using the same method we applied for volatility.
-
-<div style="margin-top:20px;"></div>
-
+::: {style="margin-top:20px;"}
+:::
 
 ```{r echo=FALSE}
 
@@ -316,143 +374,167 @@ return_plot
 
 ```
 
+While Apple and Microsoft kept things relatively stable and steady throughout the period, Tesla stood out by swinging between the highest highs and the lowest lows.
+If you want to understand the relationship between risk and return, Tesla is the perfect example.
 
-While Apple and Microsoft kept things relatively stable and steady throughout the period, Tesla stood out by swinging between the highest highs and the lowest lows. If you want to understand the relationship between risk and return, Tesla is the perfect example.
+In the first half of 2020, as the pandemic shook the world, Tesla skyrocketed.
+Both its volatility and returns peaked.
+It was one of those moments where taking a risk really paid off.
 
-In the first half of 2020, as the pandemic shook the world, Tesla skyrocketed. Both its volatility and returns peaked. It was one of those moments where taking a risk really paid off.
+But it didn’t always go that way.
+In the first half of 2022, with war and economic uncertainty in the air, Tesla was once again highly volatile — but this time, returns went negative.
+Same level of risk, very different outcome.
 
-But it didn’t always go that way. In the first half of 2022, with war and economic uncertainty in the air, Tesla was once again highly volatile — but this time, returns went negative. Same level of risk, very different outcome.
-
-By 2023, Tesla was back on its feet. As the broader market started to recover, Tesla’s returns picked up again.
+By 2023, Tesla was back on its feet.
+As the broader market started to recover, Tesla’s returns picked up again.
 
 What all of this shows is simple: Volatility doesn’t just point to potential gains — it also warns us about possible losses.
 
-<div style="background-color:#fafafa; border:1px solid #ddd; padding:10px; border-radius:6px; width:300px; text-align:center; box-shadow: 1px 1px 5px rgba(0,0,0,0.05); margin: 20px auto;">
-  <img src="images/tesla.png" alt="Tesla graph" style="max-width:100%; height:auto;">
-</div>
+::: {style="background-color:#fafafa; border:1px solid #ddd; padding:10px; border-radius:6px; width:300px; text-align:center; box-shadow: 1px 1px 5px rgba(0,0,0,0.05); margin: 20px auto;"}
+<img src="images/tesla.png" alt="Tesla graph" style="max-width:100%; height:auto;"/>
+:::
 
+### How much value do we put at risk by investing in a particular stock?
 
+This chart compares the expected daily returns and risks (standard deviation) of Apple (AAPL), Microsoft (MSFT), and Tesla (TSLA).
+The x-axis shows the expected daily return, while the y-axis shows the risk.
+This allows us to easily see each stock’s risk-return profile.
 
-<div style="background-color:#fcfcfc; border-left:3px solid #d0d0d0; padding:10px 14px; font-style:italic; font-size:1em; color:#444; margin-bottom:20px;">
-  <strong>Risk</strong> can reward you... <br>
-  or remind you <em>who's in charge.</em>
-</div>
+```{r}
+returns_clean <- na.omit(returns_combined)
+returns_df <- data.frame(Date = index(returns_clean), coredata(returns_clean))
+
+mean_vals <- colMeans(returns_df[, c("AAPL", "MSFT", "TSLA")])
+sd_vals <- apply(returns_df[, c("AAPL", "MSFT", "TSLA")], 2, sd)
+
+summary_stats <- data.frame(
+  Ticker = names(mean_vals),
+  Mean = as.numeric(mean_vals),
+  SD = as.numeric(sd_vals)
+)
+
+ggplot(summary_stats, aes(x = Mean, y = SD, label = Ticker, color = Ticker)) +
+  geom_point(size = 3) +
+  geom_text(nudge_y = 0.001, size = 5, show.legend = FALSE) +
+  labs(
+    title = "Expected Daily Return vs Risk (Standard Deviation)",
+    x = "Expected Daily Return",
+    y = "Risk (Standard Deviation)"
+  ) +
+  theme_minimal()
+
+```
+
+As seen in the chart, Tesla offers the highest expected return but also comes with the highest risk.
+Microsoft has the lowest risk with a moderate return, and Apple falls in between.
+This helps investors balance risk and return when making decisions.
+
+------------------------------------------------------------------------
 
 <p style="margin: 20px 0;">
-  Alright — now that things are starting to make a bit more sense, let’s go back to the question we asked at the very beginning:
+
+Alright — now that things are starting to make a bit more sense, let’s go back to the question we asked at the very beginning:
+
 </p>
 
-<div style="background-color:#fdfdfd; border-left:4px solid #90caf9; padding:12px 16px; font-size:1em; color:#333; margin-top:20px;">
-  <em>Should I put all my money into one strong stock, or is it smarter to diversify and spread the risk?</em>
-</div>
+::: {style="background-color:#fdfdfd; border-left:4px solid #90caf9; padding:12px 16px; font-size:1em; color:#333; margin-top:20px;"}
+<em>Should I put all my money into one strong stock, or is it smarter to diversify and spread the risk?`<`{=html}
+`/em>`{=html}
+:::
 
-<div style="margin-top:20px;"></div>
+::: {style="margin-top:20px;"}
+:::
 
 Let’s take a closer look.
 
----------------------------------------
-
-#	Does diversification reduce risk?
+# Does diversification reduce risk?
 
 There is a well-known saying often attributed to economist Harry Markowitz, the father of Modern Portfolio Theory:
 
-<div style="display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 20px; margin: 30px auto; max-width: 900px;">
+::::: {style="display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 20px; margin: 30px auto; max-width: 900px;"}
+<!-- Left: Image -->
 
-  <!-- Left: Image -->
-<div style="background-color:#fafafa; border:1px solid #ddd; padding:10px; border-radius:6px; width:200px; text-align:center; box-shadow: 1px 1px 5px rgba(0,0,0,0.05); margin: 20px auto;">
-  <img src="images/hary.png" alt="Harry Markowitz" style="max-width:100%; height:auto;">
-</div>
+::: {style="background-color:#fafafa; border:1px solid #ddd; padding:10px; border-radius:6px; width:200px; text-align:center; box-shadow: 1px 1px 5px rgba(0,0,0,0.05); margin: 20px auto;"}
+<img src="images/hary.png" alt="Harry Markowitz" style="max-width:100%; height:auto;"/>
+:::
 
-  <!-- Right: Quote -->
-  <div style="flex: 1; min-width:250px; background-color:#fefefe; border-left:4px solid #a5d6a7; padding:14px 20px; font-style:italic; font-size:1.1em; color:#333; border-radius:6px; box-shadow:1px 1px 6px rgba(0,0,0,0.04);">
-    “Diversification is the only free lunch in investing.”
-</div> 
+<!-- Right: Quote -->
 
-</div>
+::: {style="flex: 1; min-width:250px; background-color:#fefefe; border-left:4px solid #a5d6a7; padding:14px 20px; font-style:italic; font-size:1.1em; color:#333; border-radius:6px; box-shadow:1px 1px 6px rgba(0,0,0,0.04);"}
+```         
+“Diversification is the only free lunch in investing.”
+```
+:::
+:::::
 
-
-
-
-<div style="background-color:#fcfcfc; border:1px solid #ddd; border-radius:6px; padding:14px; max-width:300px; margin: 30px auto 20px auto; box-shadow:1px 1px 6px rgba(0,0,0,0.05); text-align:left;">
-  <img src="images/eggs.png" alt="Basket of Eggs" style="max-width:100%; height:auto;">
-</div>
+::: {style="background-color:#fcfcfc; border:1px solid #ddd; border-radius:6px; padding:14px; max-width:300px; margin: 30px auto 20px auto; box-shadow:1px 1px 6px rgba(0,0,0,0.05); text-align:left;"}
+<img src="images/eggs.png" alt="Basket of Eggs" style="max-width:100%; height:auto;"/>
+:::
 
 <p style="margin-top:20px;">
-  Diversification means spreading investments across different assets to reduce exposure to the risk of any single investment. The basic idea is that not all assets move in the same direction at the same time. By combining assets with different risk and return profiles, investors can potentially reduce the overall risk of their portfolio while maintaining reasonable return expectations. The goal of diversification is to reduce overall volatility and achieve a more balanced return by combining assets with low correlation.
+
+Diversification means spreading investments across different assets to reduce exposure to the risk of any single investment.
+The basic idea is that not all assets move in the same direction at the same time.
+By combining assets with different risk and return profiles, investors can potentially reduce the overall risk of their portfolio while maintaining reasonable return expectations.
+The goal of diversification is to reduce overall volatility and achieve a more balanced return by combining assets with low correlation.
+
 </p>
 
 ### Correlation analysis
 
 Correlation analysis is conducted to identify which assets, when combined in a portfolio, will have a risk-reducing effect.
 
-<div style="background-color:#fefefe; border-left:4px solid #64b5f6; padding:16px 20px; font-size:1.05em; color:#333; max-width:600px; margin: 30px auto; border-radius:6px; box-shadow:1px 1px 5px rgba(0,0,0,0.04); line-height:1.6;">
-  <p style="margin: 0;"><strong>Low correlation</strong> reduces portfolio volatility.</p>
-  <p style="margin: 8px 0 0 0;"><strong>High correlation</strong> increases portfolio volatility.</p>
-</div>
+::: {style="background-color:#fefefe; border-left:4px solid #64b5f6; padding:16px 20px; font-size:1.05em; color:#333; max-width:600px; margin: 30px auto; border-radius:6px; box-shadow:1px 1px 5px rgba(0,0,0,0.04); line-height:1.6;"}
+<p style="margin: 0;">
+
+<strong>Low correlation</strong> reduces portfolio volatility.
+
+</p>
+
+<p style="margin: 8px 0 0 0;">
+
+<strong>High correlation</strong> increases portfolio volatility.
+
+</p>
+:::
+
+```{r echo=FALSE, message=TRUE}
 
 
-```{r message=TRUE, include=FALSE}
-prices <- merge(Cl(AAPL), Cl(TSLA), Cl(MSFT))
-colnames(prices) <- c("AAPL", "TSLA", "MSFT")
-returns <- na.omit(ROC(prices, type = "discrete"))
-cor_matrix <- cor(returns)
-print(cor_matrix)
+cor_matrix <- cor(returns_combined[, c("AAPL", "MSFT", "TSLA")], use = "complete.obs")
+
+corrplot(cor_matrix, method = "color", type = "upper", 
+         tl.col = "black", tl.srt = 45, addCoef.col = "black")
 
 ```
-Here are the correlations between stocks that we calculated with the cor() function, using daily returns derived from the ROC() function in the {TTR} package.
 
-<table style="border-collapse: collapse; margin: 30px auto; font-size: 1em; text-align: center; box-shadow: 1px 1px 6px rgba(0,0,0,0.05); max-width: 600px;">
-  <thead>
-    <tr style="background-color: #f0f0f0;">
-      <th style="border: 1px solid #ccc; padding: 10px 16px;"></th>
-      <th style="border: 1px solid #ccc; padding: 10px 16px;">AAPL</th>
-      <th style="border: 1px solid #ccc; padding: 10px 16px;">TSLA</th>
-      <th style="border: 1px solid #ccc; padding: 10px 16px;">MSFT</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <th style="border: 1px solid #ccc; padding: 8px; text-align: center;">AAPL</th>
-      <td style="border: 1px solid #ccc; padding: 8px;">1.0000</td>
-      <td style="border: 1px solid #ccc; padding: 8px;">0.4659</td>
-      <td style="border: 1px solid #ccc; padding: 8px;">0.7342</td>
-    </tr>
-    <tr>
-      <th style="border: 1px solid #ccc; padding: 8px; text-align: center;">TSLA</th>
-      <td style="border: 1px solid #ccc; padding: 8px;">0.4659</td>
-      <td style="border: 1px solid #ccc; padding: 8px;">1.0000</td>
-      <td style="border: 1px solid #ccc; padding: 8px;">0.4318</td>
-    </tr>
-    <tr>
-      <th style="border: 1px solid #ccc; padding: 8px; text-align: center;">MSFT</th>
-      <td style="border: 1px solid #ccc; padding: 8px;">0.7342</td>
-      <td style="border: 1px solid #ccc; padding: 8px;">0.4318</td>
-      <td style="border: 1px solid #ccc; padding: 8px;">1.0000</td>
-    </tr>
-  </tbody>
-</table>
+Apple (AAPL) and Microsoft (MSFT) show a strong positive correlation (0.73), indicating their daily returns tend to move in the same direction.
+Tesla (TSLA) is less correlated with both AAPL (0.47) and MSFT (0.43), suggesting it behaves more independently in terms of daily returns.
 
-
-#### Proposed Portfolio 
+#### Proposed Portfolio
 
 The proposed portfolio allocation of 50% Microsoft, 30% Tesla, and 20% Apple is based on the observed correlation structure among the assets and the goal of achieving effective diversification.
 
-Microsoft and Apple are highly correlated, which means they tend to move in the same direction. Allocating too much to both would reduce diversification benefits. Therefore, Microsoft is kept as the core low-volatility asset, while Apple’s weight is limited to avoid excessive overlap.
+Microsoft and Apple are highly correlated, which means they tend to move in the same direction.
+Allocating too much to both would reduce diversification benefits.
+Therefore, Microsoft is kept as the core low-volatility asset, while Apple’s weight is limited to avoid excessive overlap.
 
-Tesla, on the other hand, has only moderate correlation with both Microsoft and Apple. Including Tesla at a moderate level (30%) enhances diversification and adds growth potential, without excessively increasing portfolio risk.
+Tesla, on the other hand, has only moderate correlation with both Microsoft and Apple.
+Including Tesla at a moderate level (30%) enhances diversification and adds growth potential, without excessively increasing portfolio risk.
 
 ### Method of Comparison
 
 #### Shape Ratio :
 
-The Sharpe ratio is one of the most widely used methods for measuring risk-adjusted relative returns. It compares a fund's historical or projected returns relative to an investment benchmark with the historical or expected variability of such returns.
+The Sharpe ratio is one of the most widely used methods for measuring risk-adjusted relative returns.
+It compares a fund's historical or projected returns relative to an investment benchmark with the historical or expected variability of such returns.
 
-The higher the ratio, the higher the risk compensation an investment offers. Investors will therefore have a preference for investments with a high Sharpe ratio or investments that raise the entire portfolio's Sharpe ratio through diversification.
+The higher the ratio, the higher the risk compensation an investment offers.
+Investors will therefore have a preference for investments with a high Sharpe ratio or investments that raise the entire portfolio's Sharpe ratio through diversification.
 
-<div style="background-color:#fafafa; border:1px solid #ddd; padding:10px; border-radius:6px; width:550px; text-align:center; box-shadow: 1px 1px 5px rgba(0,0,0,0.05); margin: 20px auto;">
-  <img src="images/shaperatio.png" alt="Sharpe Ratio Formula" style="max-width:100%; height:auto;">
-</div>
-
+::: {style="background-color:#fafafa; border:1px solid #ddd; padding:10px; border-radius:6px; width:550px; text-align:center; box-shadow: 1px 1px 5px rgba(0,0,0,0.05); margin: 20px auto;"}
+<img src="images/shaperatio.png" alt="Sharpe Ratio Formula" style="max-width:100%; height:auto;"/>
+:::
 
 ### Hypothesis
 
@@ -466,8 +548,13 @@ fully concentrated portfolios consisting of only Microsoft, only Apple, or only 
 
 These comparisons are made without relying on correlation structures, allowing us to assess whether the proposed weights themselves lead to a more efficient risk-return outcome.
 
-
 ```{r include=FALSE}
+returns <- na.omit(merge(
+  dailyReturn(Ad(AAPL)),
+  dailyReturn(Ad(MSFT)),
+  dailyReturn(Ad(TSLA))
+))
+
 portfolio_sharpe <- function(weights, returns, name) {
   mean_ret <- colMeans(returns) * 252
   cov_matrix <- cov(returns) * 252
@@ -489,38 +576,23 @@ portfolio_sharpe(c(1.00, 0.00, 0.00), returns, "100% Microsoft")
 
 
 ```
-<table style="border-collapse: collapse; margin: 30px auto; font-size: 1em; text-align: center; box-shadow: 1px 1px 6px rgba(0,0,0,0.05); max-width: 600px;">
-  <thead>
-    <tr style="background-color: #f0f0f0;">
-      <th style="border: 1px solid #ccc; padding: 10px 16px;">Portfolio</th>
-      <th style="border: 1px solid #ccc; padding: 10px 16px;">Sharpe Ratio</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td style="border: 1px solid #ccc; padding: 8px;">Proposed Portfolio</td>
-      <td style="border: 1px solid #ccc; padding: 8px;">1.32</td>
-    </tr>
-    <tr>
-      <td style="border: 1px solid #ccc; padding: 8px;">Evenly Split Portfolio<br><span style="font-size: 0.9em; color: #666;">(Equal weights: 33% each)</span></td>
-<td style="border: 1px solid #ccc; padding: 8px;">1.30</td>
-    </tr>
-    <tr>
-      <td style="border: 1px solid #ccc; padding: 8px;">100% Tesla</td>
-      <td style="border: 1px solid #ccc; padding: 8px;">0.97</td>
-    </tr>
-    <tr>
-      <td style="border: 1px solid #ccc; padding: 8px;">100% Apple</td>
-      <td style="border: 1px solid #ccc; padding: 8px;">1.10</td>
-    </tr>
-    <tr>
-      <td style="border: 1px solid #ccc; padding: 8px;">100% Microsoft</td>
-      <td style="border: 1px solid #ccc; padding: 8px;">1.16</td>
-    </tr>
-  </tbody>
-</table>
 
-### Which Portfolio Performs Best? 
++---------------------------+--------------+
+| Portfolio                 | Sharpe Ratio |
++===========================+==============+
+| Proposed Portfolio        | 1.32         |
++---------------------------+--------------+
+| Evenly Split Portfolio\   | 1.30         |
+| (Equal weights: 33% each) |              |
++---------------------------+--------------+
+| 100% Tesla                | 0.97         |
++---------------------------+--------------+
+| 100% Apple                | 1.10         |
++---------------------------+--------------+
+| 100% Microsoft            | 1.16         |
++---------------------------+--------------+
+
+### Which Portfolio Performs Best?
 
 As expected, the proposed portfolio (50% MSFT – 30% TSLA – 20% AAPL) achieved the highest Sharpe ratio (1.32) among all compared strategies, confirming our hypothesis that this allocation provides the most efficient return relative to the risk taken.
 
@@ -536,38 +608,34 @@ These results confirm that strategic asset allocation, rather than equal weighti
 
 ### Recommendation
 
-While the proposed portfolio (50% Microsoft, 30% Tesla, 20% Apple) achieved the highest Sharpe ratio in our analysis, it is important to emphasize that there is no universally ideal portfolio. The optimal allocation depends not only on numerical performance metrics but also on the investor's individual risk tolerance, goals, and personal preferences.
+While the proposed portfolio (50% Microsoft, 30% Tesla, 20% Apple) achieved the highest Sharpe ratio in our analysis, it is important to emphasize that there is no universally ideal portfolio.
+The optimal allocation depends not only on numerical performance metrics but also on the investor's individual risk tolerance, goals, and personal preferences.
 
-For example, an investor with a high risk appetite may reasonably prefer a higher allocation to Tesla, accepting greater volatility in exchange for potentially higher returns. In contrast, a more conservative investor might prioritize stability and allocate more heavily to Microsoft or Apple.
+For example, an investor with a high risk appetite may reasonably prefer a higher allocation to Tesla, accepting greater volatility in exchange for potentially higher returns.
+In contrast, a more conservative investor might prioritize stability and allocate more heavily to Microsoft or Apple.
 
-Therefore, we recommend that portfolio construction should not be based solely on statistical indicators such as the Sharpe ratio. Instead, investors should take into account their own investment personality, time horizon, and financial goals. Quantitative results can inform decision-making—but they should be used as a guide, not as a rule.
+Therefore, we recommend that portfolio construction should not be based solely on statistical indicators such as the Sharpe ratio.
+Instead, investors should take into account their own investment personality, time horizon, and financial goals.
+Quantitative results can inform decision-making—but they should be used as a guide, not as a rule.
 
+------------------------------------------------------------------------
 
-
-
-
-
-
----
 # Sources
 
-1. **Apple vs. Tesla: Which Growth Stock to Own?** — *TheStreet*  
-   <https://www.thestreet.com/apple/stock/apple-vs-tesla-which-growth-stock-to-own>
+1.  **Apple vs. Tesla: Which Growth Stock to Own?** — *TheStreet*\
+    <https://www.thestreet.com/apple/stock/apple-vs-tesla-which-growth-stock-to-own>
 
-2. **Breaking Down the Geometric Mean** — *Investopedia*  
-   <https://www.investopedia.com/articles/investing/071113/breaking-down-geometric-mean.asp>
+2.  **Breaking Down the Geometric Mean** — *Investopedia*\
+    <https://www.investopedia.com/articles/investing/071113/breaking-down-geometric-mean.asp>
 
-3. **Testing ChatGPT: Arithmetic vs. Geometric Returns** — *TheStreet Retirement Daily*  
-   <https://www.thestreet.com/retirement-daily/your-money/testing-chatgpt-arithmetic-vs-geometric-returns>
+3.  **Testing ChatGPT: Arithmetic vs. Geometric Returns** — *TheStreet Retirement Daily*\
+    <https://www.thestreet.com/retirement-daily/your-money/testing-chatgpt-arithmetic-vs-geometric-returns>
 
-4. **Harry Markowitz and Modern Portfolio Theory** — *Corporate Finance Institute*  
-   <https://corporatefinanceinstitute.com/resources/career-map/sell-side/capital-markets/harry-markowitz/>
+4.  **Harry Markowitz and Modern Portfolio Theory** — *Corporate Finance Institute*\
+    <https://corporatefinanceinstitute.com/resources/career-map/sell-side/capital-markets/harry-markowitz/>
 
-5. **Sharpe Ratio** — *Investopedia*  
-   <https://www.investopedia.com/terms/s/sharperatio.asp>
+5.  **Sharpe Ratio** — *Investopedia*\
+    <https://www.investopedia.com/terms/s/sharperatio.asp>
 
-6. **Tesla-meme** — *9GAG*  
-   <https://9gag.com/tag/cybertruck>
-
-
-
+6.  **Tesla-meme** — *9GAG*\
+    <https://9gag.com/tag/cybertruck>
