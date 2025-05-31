@@ -1,19 +1,29 @@
 ---
 title: "Stock Market Analysis"
-author: "Yaren Demir and Ivan Halka"
+subtitle: "Risk, Return, and Portfolio Insights Using CAPM"
+author: 
+  - name: "Yaren Demir"
+  - name: "Ivan Halka"
 format: 
   html:
     toc: true
     toc-depth: 3
     toc-float: true
-    number-sections: false
-    theme: cerulean
+    number-sections: true
+    theme: flatly        
     code-fold: true       
     code-tools: true    
+    df-print: paged      
   pdf:
     toc: true
     toc-depth: 3
+    number-sections: true
+    fig-caption: true
+    keep-tex: true        
 editor: visual
+fontsize: 11pt
+mainfont: "Palatino"
+geometry: margin=1in
 ---
 
 ```{r message=FALSE, warning=FALSE, include=FALSE}
@@ -31,7 +41,7 @@ library(tidyr)
 
 Let’s be honest—when it comes to investing, most of us have asked ourselves:
 
-::: {.callout-tip}
+::: {.callout-question}
 **Should I go all in on a single high-performing stock, or play it safe by spreading the risk?**
 :::
 
@@ -39,22 +49,42 @@ Or maybe that question hasn’t crossed your mind yet—because you’re just st
 
 We’re taking a closer look at how the stock prices of Apple, Tesla, and Microsoft have developed over time, and how their movements compare to the Swiss Market Index (SSMI). This helps us see whether these companies follow similar trends as the overall Swiss market or behave differently.
 
+## Summary of Questions and Analysis Methods
 
 We’ll uncover trends, visualize performance, and break down how to assess stock risk using historical data.
 
 Here’s what we’re exploring:
 
-- How has the stock price changed over time?  
-- How do we calculate volatility?  
-- What is the average daily return of the stock?  
-- What is the correlation between different stocks?  
-- How much value is at risk when investing in a stock?  
-- Are there moments when Apple, Tesla, or Microsoft behave differently from the SSMI?
-- How can we build a diversified stock portfolio?
-
-
-W will also compare the performance of Apple, Microsoft, and Tesla to the Swiss stock market index (SSMI) to understand how these companies performed compared to the overall market in Switzerland.
-
+<ul style="line-height:1.8; font-size:1.05em;">
+  <li>
+    <strong>How has the stock price changed over time?</strong><br>
+    Analyzed using a line chart with Plotly (adjusted closing prices).
+  </li>
+  <li>
+    <strong>How do we calculate volatility?</strong><br>
+    Calculated as the standard deviation of daily returns.
+  </li>
+  <li>
+    <strong>What is the average daily return of the stock?</strong><br>
+    Computed using the arithmetic mean of daily returns.
+  </li>
+  <li>
+    <strong>How do you calculate the expected annual return for an asset?</strong><br>
+    Estimated using the CAPM (Capital Asset Pricing Model) via linear regression on excess returns.
+  </li>
+  <li>
+    <strong>What is the correlation between different stocks?</strong><br>
+    Assessed using a Pearson correlation matrix with visualization via <code>corrplot</code>.
+  </li>
+  <li>
+    <strong>How much value is at risk when investing in a stock?</strong><br>
+    Visualized using a scatter plot of mean return versus standard deviation (risk-return profile).
+  </li>
+  <li>
+    <strong>How can we build a diversified stock portfolio?</strong><br>
+    Based on diversification logic derived from correlation differences between assets.
+  </li>
+</ul>
 
 We will answer these questions using R Studio.
 
@@ -64,21 +94,29 @@ First we have to get the data. Yahoo Finance is a rich resource of financial mar
 
 In R, we use the **`quantmod`** package to access Yahoo Finance data. It does not require any credentials or authorization, so we can hop right into getting our data.
 
-<small>This code uses `getSymbols()` from the `quantmod` package to download daily stock data for Apple, Microsoft, and Tesla from Yahoo Finance (2019–2024).</small>
+::: {.callout-note appearance="minimal"}
+<small>In the code below, we calculate the excess return by subtracting the daily risk-free rate from the asset’s return.</small>
+:::
 
 
 ```{r}
 #| warning: false
-symbols <- c("AAPL", "MSFT", "TSLA", "^SSMI")
+symbols <- c("AAPL", "MSFT", "TSLA", "^GSPC")
 getSymbols(symbols, src = "yahoo", from = "2019-01-01", to = "2024-12-31")
 ```
 
 Now that we have the data we can start.
 
 
-<small>This code extracts the date and adjusted closing price for Apple, Tesla, and Microsoft, then merges them into one data frame by date.</small>
 
+
+::: {.callout-note appearance="minimal"}
 <small>We use adjusted closing prices because they account for stock splits, dividends, and other corporate actions, giving a more accurate view of the stock's true return over time.</small>
+:::
+
+::: {.callout-note appearance="minimal"}
+<small>This code below extracts the date and adjusted closing price for Apple, Tesla, and Microsoft, then merges them into one data frame by date.</small>
+:::
 
 ```{r}
 aapl_df <- data.frame(date = index(AAPL), coredata(AAPL)) |>
@@ -90,8 +128,6 @@ tsla_df <- data.frame(date = index(TSLA), coredata(TSLA)) |>
 msft_df <- data.frame(date = index(MSFT), coredata(MSFT)) |>
   select(date, MSFT.Adjusted)
 
-ssmi_df <- data.frame(date = index(`SSMI`), coredata(`SSMI`)) |>
-  select(date, SSMI.Adjusted = `SSMI.Adjusted`)
 
 merged_df <- aapl_df |>
   full_join(tsla_df, by = "date") |>
@@ -110,7 +146,10 @@ Instead of predicting, a more effective approach is to observe how prices have m
 
 There are many ways to visualize change over time, but the most common is a line chart.
 
-<small>Here is a chart created using the Plotly library, which is great for this purpose because it allows you to zoom in, hover over points, and explore the data interactively.</small>
+::: {.callout-note appearance="minimal"}
+<small>In the code below, we create a chart using the Plotly library, which is great for this purpose because it allows you to zoom in, hover over points, and explore the data interactively.</small>
+:::
+
 
 ```{r}
 create_stock_plot <- function(data, y_col, title_text, line_color) {
@@ -134,12 +173,11 @@ create_stock_plot <- function(data, y_col, title_text, line_color) {
 p1 <- create_stock_plot(aapl_df, "AAPL.Adjusted", "Apple Inc. (AAPL)", "blue")
 p2 <- create_stock_plot(tsla_df, "TSLA.Adjusted", "Tesla Inc. (TSLA)", "red")
 p3 <- create_stock_plot(msft_df, "MSFT.Adjusted", "Microsoft Corp. (MSFT)", "green")
-p4 <- create_stock_plot(ssmi_df, "SSMI.Adjusted", "Swiss Market Index (SSMI)", "black")
 
 p1
 p2
 p3
-p4
+
 ```
 
 If you look closely at the y-axis, you’ll notice that Tesla’s adjusted closing price spans a much wider range. This already gives us an early hint that Tesla might be more volatile compared to Apple and Microsoft.
@@ -161,7 +199,10 @@ It’s a simple but powerful way to track how a stock performs over time, spot v
 To analyze a stock’s risk, we don’t just look at its price — we track how much the price changes each day. This is where daily return comes in:
 calculates the daily return of a stock by taking today's price, dividing it by yesterday's price, and subtracting 1. This shows the percentage change in the stock's value from one day to the next.
 
-<small>The dailyReturn() function from the quantmod package.</small>
+::: {.callout-note appearance="minimal"}
+<small>In the code below, we use the <code>dailyReturn()</code> function from the <code>quantmod</code> package.</small>
+:::
+
 
 
 
@@ -179,7 +220,10 @@ returns_df <- merge(
 
 ```
 
-<small>Using a line chart, we can visualize and examine the time series behavior of daily returns for the three selected assets.</small>
+::: {.callout-note appearance="minimal"}
+<small>In the code below, we use a line chart to visualize and examine the time series behavior of daily returns for the three selected assets.</small>
+:::
+
 
 ```{r}
 plot_daily_return <- function(return_xts, ticker, line_color = "blue") {
@@ -227,7 +271,22 @@ From the COVID-19 outbreak and the vaccine rollout, to the war in Ukraine, risin
 
 To keep our analysis clear and accessible, we decided to use a simpler method — grouping adjusted daily returns into half-year periods and calculating the standard deviation for each group.
 
-<small>This code groups daily returns into half-year periods and calculates the average (mean) and risk (standard deviation) for each stock in each period.</small>
+::: {.callout-note appearance="minimal"}
+<small>In the code below, we group daily returns into half-year periods and calculate the average (mean) and risk (standard deviation) for each stock in each period.</small>
+:::
+
+
+```{r}
+returns_combined <- merge(returns_aapl, returns_msft, returns_tsla)
+colnames(returns_combined) <- c("AAPL", "MSFT", "TSLA")
+returns_df <- data.frame(Date = index(returns_combined),
+                         coredata(returns_combined))
+returns_df <- returns_df %>%
+  mutate(HalfYear = paste0(year(Date), " H", ifelse(month(Date) <= 6, 1, 2)))
+```
+
+
+
 ```{r}
 returns_df <- data.frame(Date = index(returns_combined),
                          coredata(returns_combined))
@@ -240,11 +299,17 @@ grouped_data <- returns_df %>%
                    list(Mean = ~mean(.x, na.rm = TRUE),
                         SD = ~sd(.x, na.rm = TRUE))))
 
-
 ```
 
 
-<small>This code adds event labels and lines to highlight key periods.</small>
+
+::: {.callout-note appearance="minimal"}
+<small>In the code below, we add event labels and lines to highlight key periods.</small>
+:::
+
+
+
+
 ```{r}
 grouped_data$HalfYear <- factor(grouped_data$HalfYear, levels = grouped_data$HalfYear)
 
@@ -268,7 +333,12 @@ event_lines <- lapply(event_labels$HalfYear, function(h) {
 ```
 
 
-<small>This chart was built with plot_ly() to make the volatility trends interactive and easy to explore. Key events are marked to show their impact over time. Alternatively, a ggplot2 line chart could be used for a static version, better suited for printed reports.</small>
+::: {.callout-note appearance="minimal"}
+<small>In the code below, we use <code>plot_ly()</code> to build an interactive chart of volatility trends. Key events are marked to show their impact over time. Alternatively, a <code>ggplot2</code> line chart could be used for a static version, better suited for printed reports.</small>
+:::
+
+
+
 ```{r}
 
 volatility_plot <- plot_ly(data = grouped_data) %>%
@@ -338,7 +408,12 @@ Let’s find out by grouping adjusted daily returns into half-year periods — u
 
 
 
-<small>This chart shows how returns changed over time and highlights the impact of key events. Plotly makes it interactive and easy to compare stocks.</small>
+::: {.callout-note appearance="minimal"}
+<small>In the code below, we create a chart that shows how returns changed over time and highlights the impact of key events. <code>plot_ly()</code> makes it interactive and easy to compare stocks.</small>
+:::
+
+
+
 ```{r}
 return_plot <- plot_ly(data = grouped_data) %>%
   add_trace(x = ~HalfYear, y = ~AAPL_Mean, name = "AAPL",
@@ -370,7 +445,12 @@ return_plot <- plot_ly(data = grouped_data) %>%
 return_plot
 ```
 
-<small>The y-axis shows average daily returns, ranging from -0.4% to +0.6%. This scale helps us quickly see which stocks had positive or negative average performance in each period and how they compare to one another.</small>
+
+
+::: {.callout-note appearance="minimal"}
+<small>In the chart, the y-axis shows average daily returns, ranging from -0.4% to +0.6%. This scale helps us quickly see which stocks had positive or negative average performance in each period and how they compare to one another.</small>
+:::
+
 
 Chart Explanation:
 While Apple and Microsoft remained relatively stable, Tesla stood out — swinging between extreme highs and lows. It’s a textbook example of the risk-return tradeoff.
@@ -388,9 +468,16 @@ This brings us to a critical question:
 ## How much value do we put at risk by investing in a particular stock?
 
 
-<small>This chart compares expected daily return (x-axis) and risk (y-axis), making it easy to assess the risk-return profile of each stock.</small>
+::: {.callout-note appearance="minimal"}
+<small>In the code below, we create a chart that compares expected daily return (x-axis) and risk (y-axis), making it easy to assess the risk-return profile of each stock.</small>
+:::
 
+
+::: {.callout-note appearance="minimal"}
 <small>This comparison could also be done using summary statistics or a table of values, but a visual plot makes the trade-off between risk and return easier to interpret at a glance.</small>
+:::
+
+
 
 ```{r}
 returns_clean <- na.omit(returns_combined)
@@ -421,7 +508,186 @@ As seen in the chart, Tesla offers the highest expected return — but it also c
 Microsoft stands out as the most stable option, with the lowest risk and a solid, moderate return.
 Apple lands somewhere in the middle on both fronts.
 
-This visual comparison helps investors weigh their options and find the right balance between risk and return when making decisions.
+# Estimating Expected Annual Return Using Regression Analysis
+
+
+Regression analysis comes with several applications in finance. For example, the statistical method is fundamental to the Capital Asset Pricing Model (CAPM).
+
+## Capital Asset Pricing Model (CAPM)
+
+The Capital Asset Pricing Model (CAPM) is a model that describes the relationship between the expected return and risk of investing in a security. It shows that the expected return on a security is equal to the risk-free return plus a risk premium, which is based on the beta of that security. Below is an illustration of the CAPM concept.
+
+![](images/CAMP)
+
+
+^GSPC is the symbol used by Yahoo Finance to represent the S&P 500 index, which tracks the performance of 500 large companies listed on stock exchanges in the United States.
+
+In CAPM analysis, the S&P 500 is commonly used as the "market portfolio" for comparing individual stocks like Apple (AAPL).
+
+
+::: {.callout-note appearance="minimal"}
+<small>In the code below, we calculate log returns because they measure the relative daily price change. Log returns are preferred in finance since they are additive over time and better handle volatility. Returns (rather than prices) are used for regression and risk analysis.</small>
+:::
+
+
+
+
+```{r}
+# Calculate daily log returns for Apple stock
+aapl_ret <- dailyReturn(Cl(AAPL), type = "log")
+# Calculate daily log returns for S&P 500 index
+sp500_ret <- dailyReturn(Cl(GSPC), type = "log")
+```
+
+
+
+::: {.callout-note appearance="minimal"}
+<small>The value <code>0.025</code> is a commonly used example of an annual risk-free interest rate. It approximates the long-term yield of safe government bonds, like U.S. Treasuries. The number <code>252</code> reflects the typical number of trading days in a year and is standard in financial modeling.</small>
+:::
+
+
+
+```{r}
+# Convert the annual risk-free rate to a daily rate for use in daily return calculations
+rf <- 0.025 / 252
+```
+
+
+
+::: {.callout-note appearance="minimal"}
+<small>In the code below, we subtract the daily risk-free rate from Apple’s and the S&P 500’s daily returns to calculate the excess return — the amount earned beyond a risk-free investment each day.</small>
+:::
+
+
+
+```{r}
+# Calculate Apple's daily excess returns over the risk-free rate
+aapl_excess <- aapl_ret - rf
+
+# Calculate S&P 500's daily excess returns over the risk-free rate
+sp500_excess <- sp500_ret - rf
+
+```
+
+
+
+Once the excess returns are prepared, this step fits a linear regression model (CAPM) to estimate Apple’s beta. The model shows how much Apple’s returns move in response to market movements.
+
+The beta value estimated here will be used in the CAPM formula above to calculate Apple’s expected return relative to the market.
+
+
+
+
+```{r}
+returns <- na.omit(merge(aapl_excess, sp500_excess))
+colnames(returns) <- c("AAPL_Excess", "SP500_Excess")
+
+# Fit a linear regression model (CAPM) to estimate Apple's beta relative to the S&P 500
+capm_model <- lm(AAPL_Excess ~ SP500_Excess, data = returns)
+
+# Display a summary of the CAPM regression results
+summary(capm_model)
+
+# Extract the beta value
+beta <- coef(capm_model)["SP500_Excess"]
+print(beta)
+```
+
+### What do the results show?
+
+Apple’s excess returns tend to react quite strongly to market ups and downs, with a beta of 1.2—so when the market moves, Apple usually moves even more.
+
+There’s a bit of positive alpha, meaning Apple might be doing a little better than what the market predicts, but it’s not statistically significant. In other words, we can’t say for sure that Apple consistently beats market expectations.
+
+The model itself does a solid job, explaining about 61% of the day-to-day swings in Apple’s returns, which is actually quite good by finance standards.
+
+We created the linear model below to visually show the relationship between Apple’s excess returns and the S&P 500’s excess returns.
+
+```{r}
+ggplot(returns, aes(x = SP500_Excess, y = AAPL_Excess)) +
+  geom_point(alpha = 0.3, color = "steelblue") +
+  geom_smooth(method = "lm", color = "firebrick", se = FALSE) +
+  labs(title = "AAPL Excess Return vs. S&P 500 Excess Return",
+       x = "S&P 500 Excess Return",
+       y = "AAPL Excess Return") +
+  theme_minimal()
+```
+
+The red line you see is the regression line (sometimes called the CAPM fit). It shows what the model predicts about how Apple’s excess returns move in relation to the S&P 500’s excess returns.
+
+The steepness of this line—known as beta—tells us how much Apple’s returns typically respond when the market goes up or down. You can also find this beta value in the linear regression summary.
+
+Each blue dot represents a real day of trading: it’s Apple’s actual excess return plotted against the S&P 500’s excess return for that day. When you look at all the blue dots together, you can see how closely the real-world results match up with what the model predicts. If the dots stick close to the line, the model is doing a good job. If they’re scattered far away, there’s more going on than the model can explain.
+
+For the next step, you take the beta value—that’s the slope of the red regression line—and use it in the CAPM formula along with the risk-free rate and the market risk premium. By plugging these numbers into the formula, you can calculate the expected return for Apple. In other words, CAPM helps you estimate how much return investors should expect, given Apple’s sensitivity to market movements and the extra reward for taking on market risk.
+
+
+### Calculation of Expected Return
+
+What is the expected annual return of Apple using the CAPM formula?
+In other words, according to the CAPM model, what is Apple’s projected return for this year?
+
+Let’s break down the answer using the formula from above in the article:
+
+Expected return = Risk Free Rate + [Beta x Market Return Premium]
+
+- Market risk premium” is typically taken from financial reports, academic sources (like Damodaran), or calculated as the difference between average market returns (e.g., S&P 500) and the current risk-free rate.
+
+
+```{r}
+# Given values
+rf_annual <- 0.025     
+market_risk_premium <- 0.075  
+
+# CAPM expected return calculation
+expected_return <- rf_annual + beta * market_risk_premium
+expected_return_percent <- expected_return * 100 
+
+
+cat("Expected return (annual, %):", round(expected_return_percent, 2), "%\n")
+
+```
+
+According to the CAPM model, Apple’s expected annual return is approximately 11–11.5%. This means that, given the current risk-free rate, market risk premium, and Apple’s beta, investors can expect an average annual return of around 11% if they hold Apple stock.
+
+
+*How about the risk ?*
+An 11% annual return isn’t risky on its own, but in finance, such high returns usually come with higher risk. It reflects compensation for bearing more uncertainty.
+
+### Repeating the CAPM Interpretation for TSLA and MSFT
+
+```{r}
+msft_ret <- dailyReturn(Cl(MSFT), type = "log")
+tsla_ret <- dailyReturn(Cl(TSLA), type = "log")
+msft_excess <- msft_ret - rf
+tsla_excess <- tsla_ret - rf
+```
+
+```{r}
+capm_model_msft <- lm(msft_excess ~ sp500_excess)
+beta_msft <- coef(capm_model_msft)["sp500_excess"]
+expected_return_msft <- rf_annual + beta_msft * market_risk_premium
+cat("Expected annual return for Microsoft (MSFT):", round(expected_return_msft * 100, 2), "%\n")
+```
+
+```{r}
+capm_model_tsla <- lm(tsla_excess ~ sp500_excess)
+beta_tsla <- coef(capm_model_tsla)["sp500_excess"]
+expected_return_tsla <- rf_annual + beta_tsla * market_risk_premium
+cat("Expected annual return for Tesla (TSLA):", round(expected_return_tsla * 100, 2), "%\n")
+
+```
+
+Microsoft (MSFT):
+Expected annual return = 11.35%
+- Indicates moderate risk and stable return, closely aligned with market movements.
+
+Tesla (TSLA):
+Expected annual return = 14.32%
+- Suggests higher risk and higher expected return, reflecting stronger sensitivity to market changes.
+
+In short: Tesla offers greater return potential but comes with higher risk, while Microsoft and Apple provide more stable performance with lower volatility.
+
 
 <p style="margin: 20px 0;">
 
@@ -430,11 +696,7 @@ Alright — now that things are starting to make a bit more sense, let’s go ba
 </p>
 
 ::: {style="background-color:#fdfdfd; border-left:4px solid #90caf9; padding:12px 16px; font-size:1em; color:#333; margin-top:20px;"}
-<em>Should I put all my money into one strong stock, or is it smarter to diversify and spread the risk?`<`{=html}
-`/em>`{=html}
-:::
-
-::: {style="margin-top:20px;"}
+<em>Should I put all my money into one strong stock, or is it smarter to diversify and spread the risk?</em>
 :::
 
 
@@ -492,7 +754,12 @@ Correlation analysis is conducted to identify which assets, when combined in a p
 :::
 
 
-<small>This chart was chosen because it makes it incredibly easy to spot relationships between the stocks at a glance. Sure, we could’ve shown the numbers in a plain table—but the color-coded layout gives instant insight without needing to interpret raw values.</small>
+<div style="background-color:#f0f8ff; border-left:4px solid #64b5f6; padding:10px 14px; font-size:0.9em; color:#333; margin:16px 0;">
+  <small>This chart was chosen because it makes it incredibly easy to spot relationships between the stocks at a glance. While we could’ve shown the numbers in a plain table, the color-coded layout provides instant insight without the need to interpret raw values.</small>
+</div>
+
+
+
 ```{r message=TRUE}
 
 
@@ -536,13 +803,13 @@ Investors will therefore have a preference for investments with a high Sharpe ra
 
 Our hypothesis is that the proposed portfolio (50% Microsoft, 30% Tesla, 20% Apple) offers a higher risk-adjusted return than both an equally weighted portfolio and any single-asset portfolio.
 
-To test this, we will compare the Sharpe ratio of the proposed allocation against:
+To test this, we will compare the Sharpe ratio of our proposed portfolio against :
 
-a random portfolio with equal weights across all three assets, and
+- A random portfolio with equal weights across all three assets, and
 
-fully concentrated portfolios consisting of only Microsoft, only Apple, or only Tesla.
+- Fully concentrated portfolios consisting of only Microsoft, only Apple, or only Tesla.
 
-These comparisons are made without relying on correlation structures, allowing us to assess whether the proposed weights themselves lead to a more efficient risk-return outcome.
+
 
 ```{r}
 returns <- na.omit(merge(
@@ -573,20 +840,7 @@ portfolio_sharpe(c(1.00, 0.00, 0.00), returns, "100% Microsoft")
 
 ```
 
-+---------------------------+--------------+
-| Portfolio                 | Sharpe Ratio |
-+===========================+==============+
-| Proposed Portfolio        | 1.32         |
-+---------------------------+--------------+
-| Evenly Split Portfolio\   | 1.30         |
-| (Equal weights: 33% each) |              |
-+---------------------------+--------------+
-| 100% Tesla                | 0.97         |
-+---------------------------+--------------+
-| 100% Apple                | 1.10         |
-+---------------------------+--------------+
-| 100% Microsoft            | 1.16         |
-+---------------------------+--------------+
+
 
 ## Which Portfolio Performs Best?
 
@@ -614,66 +868,53 @@ Therefore, we recommend that portfolio construction should not be based solely o
 Instead, investors should take into account their own investment personality, time horizon, and financial goals.
 Quantitative results can inform decision-making—but they should be used as a guide, not as a rule.
 
-# How closely are these stocks connected to the Swiss Market Index (SSMI)?
-
-
-```{r}
-merged_clean <- inner_join(merged_df, ssmi_df, by = "date")
-glimpse(merged_clean)
-```
 
 
 
-
-```{r}
-returns_all <- merged_clean %>%
-  arrange(date) %>%
-  mutate(
-    AAPL_ret = (AAPL.Adjusted / lag(AAPL.Adjusted)) - 1,
-    TSLA_ret = (TSLA.Adjusted / lag(TSLA.Adjusted)) - 1,
-    MSFT_ret = (MSFT.Adjusted / lag(MSFT.Adjusted)) - 1,
-    SSMI_ret = (SSMI.Adjusted / lag(SSMI.Adjusted)) - 1
-  ) %>%
-  na.omit()
-
-```
-
-```{r}
-returns_all %>%
-  select(AAPL_ret, TSLA_ret, MSFT_ret, SSMI_ret) %>%
-  pivot_longer(cols = everything(), names_to = "Stock", values_to = "Return") %>%
-  group_by(Stock) %>%
-  summarise(
-    Mean   = mean(Return, na.rm = TRUE),
-    SD     = sd(Return, na.rm = TRUE),
-    Sharpe = Mean / SD
-  )
-
-```
+---
 
 
-## A machine learning approach with {tidymodels}
+# Sources
 
-In this section we will be Comparing the performance and sensitivity of US tech stocks (AAPL, MSFT, TSLA) to the Swiss SSMI index using predictive models with {tidymodels}
+Apple vs. Tesla: Which Growth Stock to Own? — TheStreet
+https://www.thestreet.com/apple/stock/apple-vs-tesla-which-growth-stock-to-own
 
-```{r}
-lm_aapl <- lm(AAPL_ret ~ SSMI_ret, data = returns_all)
-lm_tsla <- lm(TSLA_ret ~ SSMI_ret, data = returns_all)
-lm_msft <- lm(MSFT_ret ~ SSMI_ret, data = returns_all)
-beta_aapl <- coef(lm_aapl)["SSMI_ret"]
-beta_tsla <- coef(lm_tsla)["SSMI_ret"]
-beta_msft <- coef(lm_msft)["SSMI_ret"]
-beta_tbl <- tibble(
-  Stock = c("AAPL", "TSLA", "MSFT"),
-  Beta = c(beta_aapl, beta_tsla, beta_msft)
-)
-ggplot(beta_tbl, aes(x = Stock, y = Beta, fill = Stock)) +
-  geom_col(show.legend = FALSE) +
-  geom_hline(yintercept = 1, linetype = "dashed", color = "red") +
-  labs(title = "Beta Coefficients w.r.t SSMI", y = "Beta") +
-  theme_minimal()
+Breaking Down the Geometric Mean — Investopedia
+https://www.investopedia.com/articles/investing/071113/breaking-down-geometric-mean.asp
 
-```
+Testing ChatGPT: Arithmetic vs. Geometric Returns — TheStreet Retirement Daily
+https://www.thestreet.com/retirement-daily/your-money/testing-chatgpt-arithmetic-vs-geometric-returns
+
+Harry Markowitz and Modern Portfolio Theory — Corporate Finance Institute
+https://corporatefinanceinstitute.com/resources/career-map/sell-side/capital-markets/harry-markowitz/
+
+Sharpe Ratio — Investopedia
+https://www.investopedia.com/terms/s/sharperatio.asp
+
+Tesla-meme — 9GAG
+https://9gag.com/tag/cybertruck
+
+What is CAPM Formula? — Corporate Finance Institute
+https://corporatefinanceinstitute.com/resources/valuation/what-is-capm-formula/
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
