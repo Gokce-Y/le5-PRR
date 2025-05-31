@@ -56,7 +56,7 @@ In this article, we will answer key finance-related questions using data from Ap
 
 We’ll uncover trends, visualize performance, and break down how to assess stock risk using historical data.
 
-Here’s what we’re exploring:
+Here’s what we’re exploring and how we approached solving each question:
 
 <ul style="line-height:1.8; font-size:1.05em;">
   <li>
@@ -89,7 +89,10 @@ Here’s what we’re exploring:
   </li>
 </ul>
 
-We will answer these questions using R Studio.
+<div style="background-color:#f0f8ff; border-left:4px solid #64b5f6; padding:10px 16px; margin: 20px 0; font-size:1em; color:#333;">
+  <strong>We answer all of these questions using RStudio and real financial data.</strong>
+</div>
+
 
 ## Getting the Data from Yahoo Finance
 
@@ -97,9 +100,10 @@ First we have to get the data. Yahoo Finance is a rich resource of financial mar
 
 In R, we use the **`quantmod`** package to access Yahoo Finance data. It does not require any credentials or authorization, so we can hop right into getting our data.
 
-::: {.callout-note appearance="minimal"}
-<small>In the code below, we calculate the excess return by subtracting the daily risk-free rate from the asset’s return.</small>
-:::
+<div style="background-color:#f1fdf5; border-left:4px solid #81c784; padding:10px 16px; margin: 20px 0; font-size:0.95em; color:#2e7d32;">
+In the code below, we calculate the excess return by subtracting the daily risk-free rate from the asset’s return.
+</div>
+
 
 
 ```{r}
@@ -113,13 +117,14 @@ Now that we have the data we can start.
 
 
 
-::: {.callout-note appearance="minimal"}
-<small>We use adjusted closing prices because they account for stock splits, dividends, and other corporate actions, giving a more accurate view of the stock's true return over time.</small>
-:::
+<div style="background-color:#fce4ec; border-left:4px solid #f06292; padding:10px 16px; margin: 20px 0; font-size:0.95em; color:#880e4f;">
+We use adjusted closing prices because they account for stock splits, dividends, and other corporate actions, giving a more accurate view of the stock's true return over time.
+</div>
 
-::: {.callout-note appearance="minimal"}
-<small>This code below extracts the date and adjusted closing price for Apple, Tesla, and Microsoft, then merges them into one data frame by date.</small>
-:::
+<div style="background-color:#f1fdf5; border-left:4px solid #81c784; padding:10px 16px; margin: 20px 0; font-size:0.95em; color:#2e7d32;">
+This code extracts the date and adjusted closing price for Apple, Tesla, and Microsoft, then merges them into one data frame by date.
+</div>
+
 
 ```{r}
 aapl_df <- data.frame(date = index(AAPL), coredata(AAPL)) |>
@@ -149,9 +154,10 @@ Instead of predicting, a more effective approach is to observe how prices have m
 
 There are many ways to visualize change over time, but the most common is a line chart.
 
-::: {.callout-note appearance="minimal"}
-<small>In the code below, we create a chart using the Plotly library, which is great for this purpose because it allows you to zoom in, hover over points, and explore the data interactively.</small>
-:::
+<div style="background-color:#f1fdf5; border-left:4px solid #81c784; padding:10px 16px; margin: 20px 0; font-size:0.95em; color:#2e7d32;">
+In the code below, we create a chart using the Plotly library, which is great for this purpose because it allows you to zoom in, hover over points, and explore the data interactively.
+</div>
+
 
 
 ```{r}
@@ -202,9 +208,10 @@ It’s a simple but powerful way to track how a stock performs over time, spot v
 To analyze a stock’s risk, we don’t just look at its price — we track how much the price changes each day. This is where daily return comes in:
 calculates the daily return of a stock by taking today's price, dividing it by yesterday's price, and subtracting 1. This shows the percentage change in the stock's value from one day to the next.
 
-::: {.callout-note appearance="minimal"}
-<small>In the code below, we use the <code>dailyReturn()</code> function from the <code>quantmod</code> package.</small>
-:::
+<div style="background-color:#f1fdf5; border-left:4px solid #81c784; padding:10px 16px; margin: 20px 0; font-size:0.95em; color:#2e7d32;">
+In the code below, we use the <code>dailyReturn()</code> function from the <code>quantmod</code> package.
+</div>
+
 
 
 
@@ -223,9 +230,10 @@ returns_df <- merge(
 
 ```
 
-::: {.callout-note appearance="minimal"}
-<small>In the code below, we use a line chart to visualize and examine the time series behavior of daily returns for the three selected assets.</small>
-:::
+<div style="background-color:#f1fdf5; border-left:4px solid #81c784; padding:10px 16px; margin: 20px 0; font-size:0.95em; color:#2e7d32;">
+In the code below, we use a line chart to visualize and examine the time series behavior of daily returns for the three selected assets.
+</div>
+
 
 
 ```{r}
@@ -274,9 +282,9 @@ From the COVID-19 outbreak and the vaccine rollout, to the war in Ukraine, risin
 
 To keep our analysis clear and accessible, we decided to use a simpler method — grouping adjusted daily returns into half-year periods and calculating the standard deviation for each group.
 
-::: {.callout-note appearance="minimal"}
-<small>In the code below, we group daily returns into half-year periods and calculate the average (mean) and risk (standard deviation) for each stock in each period.</small>
-:::
+<div style="background-color:#f1fdf5; border-left:4px solid #81c784; padding:10px 16px; margin: 20px 0; font-size:0.95em; color:#2e7d32;">
+In the code below, we group daily returns into half-year periods and calculate the average (mean) and risk (standard deviation) for each stock in each period.
+</div>
 
 
 ```{r}
@@ -306,9 +314,10 @@ grouped_data <- returns_df %>%
 
 
 
-::: {.callout-note appearance="minimal"}
-<small>In the code below, we add event labels and lines to highlight key periods.</small>
-:::
+<div style="background-color:#f1fdf5; border-left:4px solid #81c784; padding:10px 16px; margin: 20px 0; font-size:0.95em; color:#2e7d32;">
+In the code below, we add event labels and lines to highlight key periods.
+</div>
+
 
 
 
@@ -335,10 +344,9 @@ event_lines <- lapply(event_labels$HalfYear, function(h) {
 })
 ```
 
-
-::: {.callout-note appearance="minimal"}
-<small>In the code below, we use <code>plot_ly()</code> to build an interactive chart of volatility trends. Key events are marked to show their impact over time. Alternatively, a <code>ggplot2</code> line chart could be used for a static version, better suited for printed reports.</small>
-:::
+<div style="background-color:#f1fdf5; border-left:4px solid #81c784; padding:10px 16px; margin: 20px 0; font-size:0.95em; color:#2e7d32;">
+In the code below, we add event labels and lines to highlight key periods.
+</div>
 
 
 
@@ -411,9 +419,9 @@ Let’s find out by grouping adjusted daily returns into half-year periods — u
 
 
 
-::: {.callout-note appearance="minimal"}
-<small>In the code below, we create a chart that shows how returns changed over time and highlights the impact of key events. <code>plot_ly()</code> makes it interactive and easy to compare stocks.</small>
-:::
+<div style="background-color:#f1fdf5; border-left:4px solid #81c784; padding:10px 16px; margin: 20px 0; font-size:0.95em; color:#2e7d32;">
+In the code below, we create a chart that shows how returns changed over time and highlights the impact of key events. <code>plot_ly()</code> makes it interactive and easy to compare stocks.
+</div>
 
 
 
@@ -450,9 +458,10 @@ return_plot
 
 
 
-::: {.callout-note appearance="minimal"}
-<small>In the chart, the y-axis shows average daily returns, ranging from -0.4% to +0.6%. This scale helps us quickly see which stocks had positive or negative average performance in each period and how they compare to one another.</small>
-:::
+<div style="background-color:#fce4ec; border-left:4px solid #f06292; padding:10px 16px; margin: 20px 0; font-size:0.95em; color:#880e4f;">
+In the chart, the y-axis shows average daily returns, ranging from -0.4% to +0.6%. This scale helps us quickly see which stocks had positive or negative average performance in each period and how they compare to one another.
+</div>
+
 
 
 Chart Explanation:
@@ -471,14 +480,15 @@ This brings us to a critical question:
 ## How much value do we put at risk by investing in a particular stock?
 
 
-::: {.callout-note appearance="minimal"}
-<small>In the code below, we create a chart that compares expected daily return (x-axis) and risk (y-axis), making it easy to assess the risk-return profile of each stock.</small>
-:::
+<div style="background-color:#f1fdf5; border-left:4px solid #81c784; padding:10px 16px; margin: 20px 0; font-size:0.95em; color:#2e7d32;">
+In the code below, we create a chart that compares expected daily return (x-axis) and risk (y-axis), making it easy to assess the risk-return profile of each stock.
+</div>
 
 
-::: {.callout-note appearance="minimal"}
-<small>This comparison could also be done using summary statistics or a table of values, but a visual plot makes the trade-off between risk and return easier to interpret at a glance.</small>
-:::
+<div style="background-color:#fce4ec; border-left:4px solid #f06292; padding:10px 16px; margin: 20px 0; font-size:0.95em; color:#880e4f;">
+This comparison could also be done using summary statistics or a table of values, but a visual plot makes the trade-off between risk and return easier to interpret at a glance.
+</div>
+
 
 
 
@@ -528,9 +538,10 @@ The Capital Asset Pricing Model (CAPM) is a model that describes the relationshi
 In CAPM analysis, the S&P 500 is commonly used as the "market portfolio" for comparing individual stocks like Apple (AAPL).
 
 
-::: {.callout-note appearance="minimal"}
-<small>In the code below, we calculate log returns because they measure the relative daily price change. Log returns are preferred in finance since they are additive over time and better handle volatility. Returns (rather than prices) are used for regression and risk analysis.</small>
-:::
+<div style="background-color:#f1fdf5; border-left:4px solid #81c784; padding:10px 16px; margin: 20px 0; font-size:0.95em; color:#2e7d32;">
+In the code below, we calculate log returns because they measure the relative daily price change. Log returns are preferred in finance since they are additive over time and better handle volatility. Returns (rather than prices) are used for regression and risk analysis.
+</div>
+
 
 
 
@@ -544,9 +555,10 @@ sp500_ret <- dailyReturn(Cl(GSPC), type = "log")
 
 
 
-::: {.callout-note appearance="minimal"}
-<small>The value <code>0.025</code> is a commonly used example of an annual risk-free interest rate. It approximates the long-term yield of safe government bonds, like U.S. Treasuries. The number <code>252</code> reflects the typical number of trading days in a year and is standard in financial modeling.</small>
-:::
+<div style="background-color:#fce4ec; border-left:4px solid #f06292; padding:10px 16px; margin: 20px 0; font-size:0.95em; color:#880e4f;">
+The value <code>0.025</code> is a commonly used example of an annual risk-free interest rate. It approximates the long-term yield of safe government bonds, like U.S. Treasuries. The number <code>252</code> reflects the typical number of trading days in a year and is standard in financial modeling.
+</div>
+
 
 
 
@@ -557,9 +569,10 @@ rf <- 0.025 / 252
 
 
 
-::: {.callout-note appearance="minimal"}
-<small>In the code below, we subtract the daily risk-free rate from Apple’s and the S&P 500’s daily returns to calculate the excess return — the amount earned beyond a risk-free investment each day.</small>
-:::
+<div style="background-color:#f1fdf5; border-left:4px solid #81c784; padding:10px 16px; margin: 20px 0; font-size:0.95em; color:#2e7d32;">
+In the code below, we subtract the daily risk-free rate from Apple’s and the S&P 500’s daily returns to calculate the excess return — the amount earned beyond a risk-free investment each day.
+</div>
+
 
 
 
@@ -757,9 +770,10 @@ Correlation analysis is conducted to identify which assets, when combined in a p
 :::
 
 
-<div style="background-color:#f0f8ff; border-left:4px solid #64b5f6; padding:10px 14px; font-size:0.9em; color:#333; margin:16px 0;">
-  <small>This chart was chosen because it makes it incredibly easy to spot relationships between the stocks at a glance. While we could’ve shown the numbers in a plain table, the color-coded layout provides instant insight without the need to interpret raw values.</small>
+<div style="background-color:#f0f8ff; border-left:4px solid #64b5f6; padding:10px 14px; font-size:0.95em; color:#333; margin:16px 0;">
+This visualization was chosen because it makes it incredibly easy to spot relationships between the stocks at a glance. While we could’ve shown the numbers in a plain table, the color-coded layout provides instant insight without the need to interpret raw values.
 </div>
+
 
 
 
