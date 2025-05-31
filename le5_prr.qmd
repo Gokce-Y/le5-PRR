@@ -47,7 +47,10 @@ Let’s be honest—when it comes to investing, most of us have asked ourselves:
 
 Or maybe that question hasn’t crossed your mind yet—because you’re just starting out.
 
-We’re taking a closer look at how the stock prices of Apple, Tesla, and Microsoft have developed over time, and how their movements compare to the Swiss Market Index (SSMI). This helps us see whether these companies follow similar trends as the overall Swiss market or behave differently.
+In this article, we will answer key finance-related questions using data from Apple (AAPL), Tesla (TSLA), and Microsoft (MSFT).
+
+![](images/tma.webp)
+
 
 ## Summary of Questions and Analysis Methods
 
