@@ -143,7 +143,7 @@ merged_df <- aapl_df |>
 ```
 
 
-## How has the stock price changed over time?
+# How has the stock price changed over time?
 
 One of the first questions in the mind of any new investor in the stock market is that why do stock prices change every second?
 
