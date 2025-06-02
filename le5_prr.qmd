@@ -4,7 +4,7 @@ subtitle: "Risk, Return, and Portfolio Insights Using CAPM"
 author: 
   - name: "Yaren Demir"
   - name: "Ivan Halka"
-format: 
+format:
   html:
     toc: true
     toc-depth: 3
@@ -104,16 +104,14 @@ In R, we use the **`quantmod`** package to access Yahoo Finance data. It does no
 In the code below, we calculate the excess return by subtracting the daily risk-free rate from the asset’s return.
 </div>
 
-
+As we mentioned we choose 3 stocks (AAPL, MSFT, TSLA). Later we will use GSPC, so ignore it for the moment.
 
 ```{r}
-#| warning: false
 symbols <- c("AAPL", "MSFT", "TSLA", "^GSPC")
 getSymbols(symbols, src = "yahoo", from = "2019-01-01", to = "2024-12-31")
 ```
 
 Now that we have the data we can start.
-
 
 
 
@@ -195,25 +193,16 @@ If you look closely at the y-axis, you’ll notice that Tesla’s adjusted closi
 
 ## Understanding Volatility
 
-Volatility is a frequently encountered concept in the world of finance and holds great importance for investors.
-**But what exactly is volatility?** Volatility refers to the degree of fluctuation in the price of a financial asset.
-In other words, it describes how quickly and significantly the price of an asset changes.
+Volatility is a frequently encountered concept in the world of finance and holds great importance for investors. *But what exactly is volatility?* Volatility refers to the degree of fluctuation in the price of a financial asset. In other words, it describes how quickly and significantly the price of an asset changes. When I was a kid I had an opportunity to have lunch with an economist from my country. One of the thing he said :"Volatility is uncertainty". After so many years I consider it still the best one-word explanation.
 
-In order to analyze the risk of the stock we'll need to take a closer look at the daily changes of the stock, and not just its absolute value.
-we calculate the daily return, which is just the change in price from one trading day to the next.
-It’s a simple but powerful way to track how a stock performs over time, spot volatility, and get a better sense of how efficient a portfolio really is.
+To analyze a stock’s risk, we don’t just look at its price — we track how much the price changes each day. This is where daily return comes in: calculates the daily return of a stock by taking today's Opening price, dividing it by yesterday's Opening price, and subtracting 1. This shows the percentage change in the stock's value from one day to the next.
 
 ## Visualization: Daily Return Over Time
 
-To analyze a stock’s risk, we don’t just look at its price — we track how much the price changes each day. This is where daily return comes in:
-calculates the daily return of a stock by taking today's price, dividing it by yesterday's price, and subtracting 1. This shows the percentage change in the stock's value from one day to the next.
 
 <div style="background-color:#f1fdf5; border-left:4px solid #81c784; padding:10px 16px; margin: 20px 0; font-size:0.95em; color:#2e7d32;">
 In the code below, we use the <code>dailyReturn()</code> function from the <code>quantmod</code> package.
 </div>
-
-
-
 
 
 ```{r}
@@ -266,8 +255,12 @@ p3
 ```
 
 One thing stands out here: Tesla (TSLA) is far more volatile than Apple (AAPL) and Microsoft (MSFT).
+While AAPL and MSFT tend to show steady, predictable price movements, TSLA swings much more aggressively from day to day. This kind of behavior points to Tesla being a more speculative and higher-risk stock.
+
+One thing stands out here: Tesla (TSLA) is far more volatile than Apple (AAPL) and Microsoft (MSFT).
 While AAPL and MSFT tend to show steady, predictable price movements, TSLA swings much more aggressively from day to day.
-This kind of behavior points to Tesla being a more speculative and higher-risk stock.
+
+At the same time, we can observe periods when all three stocks move in the same direction — either rising or falling together. This suggests that broader market forces, such as economic news or global events, can affect all stocks simultaneously, regardless of their individual characteristics.
 
 
 ## Visualization: Volatility Over Time
@@ -278,9 +271,10 @@ Markets tend to get turbulent during uncertain times — whether it’s due to p
 In such periods, stock prices can swing sharply, creating both big risks and big opportunities or losses.
 
 The period from 2019 to 2024 was anything but ordinary.
-From the COVID-19 outbreak and the vaccine rollout, to the war in Ukraine, rising inflation, and the recent AI-driven stock surge — markets have been shaped by one major event after another.
+From the COVID-19 outbreak to the war in Ukraine, rising inflation, and the recent AI-driven stock surge — markets have been shaped by one major event after another.
 
-To keep our analysis clear and accessible, we decided to use a simpler method — grouping adjusted daily returns into half-year periods and calculating the standard deviation for each group.
+To keep our analysis clear, we decided to use a simpler method: 
+- grouping adjusted daily returns into half-year periods and calculating the standard deviation for each group.
 
 <div style="background-color:#f1fdf5; border-left:4px solid #81c784; padding:10px 16px; margin: 20px 0; font-size:0.95em; color:#2e7d32;">
 In the code below, we group daily returns into half-year periods and calculate the average (mean) and risk (standard deviation) for each stock in each period.
@@ -391,7 +385,7 @@ Up to that point, the three stocks were moving in sync — reacting to global ev
 
 But 2023 broke that pattern.
 
-That’s when the AI boom started gaining serious traction, and Tesla began to break away from the pack. While Apple and Microsoft stayed relatively stable, Tesla’s volatility picked up again — likely fueled by hype, speculation, and sector-specific buzz.
+That’s when the AI boom started gaining serious traction, and Tesla began to break away from the pack. While Apple and Microsoft stayed relatively stable, Tesla’s volatility picked up again.
 
 Sure, Tesla swings harder than the others. But that’s also part of what draws investors in. Bigger risk can mean bigger reward — and for some, that trade-off is worth it.
 
@@ -488,8 +482,6 @@ In the code below, we create a chart that compares expected daily return (x-axis
 <div style="background-color:#fce4ec; border-left:4px solid #f06292; padding:10px 16px; margin: 20px 0; font-size:0.95em; color:#880e4f;">
 This comparison could also be done using summary statistics or a table of values, but a visual plot makes the trade-off between risk and return easier to interpret at a glance.
 </div>
-
-
 
 
 ```{r}
