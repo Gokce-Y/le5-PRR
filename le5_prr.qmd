@@ -125,6 +125,8 @@ This code extracts the date and adjusted closing price for Apple, Tesla, and Mic
 
 
 ```{r}
+# Extract date and adjusted price for Stocks
+
 aapl_df <- data.frame(date = index(AAPL), coredata(AAPL)) |>
   select(date, AAPL.Adjusted)
 
@@ -134,10 +136,6 @@ tsla_df <- data.frame(date = index(TSLA), coredata(TSLA)) |>
 msft_df <- data.frame(date = index(MSFT), coredata(MSFT)) |>
   select(date, MSFT.Adjusted)
 
-
-merged_df <- aapl_df |>
-  full_join(tsla_df, by = "date") |>
-  full_join(msft_df, by = "date") 
 ```
 
 
@@ -159,6 +157,10 @@ In the code below, we create a chart using the Plotly library, which is great fo
 
 
 ```{r}
+# Define colors for each ticker
+colors <- c(AAPL = "green", MSFT = "blue", TSLA = "red")
+
+# Define the function to plot adjusted closing price
 create_stock_plot <- function(data, y_col, title_text, line_color) {
   plot_ly(
     data = data,
@@ -177,13 +179,27 @@ create_stock_plot <- function(data, y_col, title_text, line_color) {
     )
 }
 
-p1 <- create_stock_plot(aapl_df, "AAPL.Adjusted", "Apple Inc. (AAPL)", "blue")
-p2 <- create_stock_plot(tsla_df, "TSLA.Adjusted", "Tesla Inc. (TSLA)", "red")
-p3 <- create_stock_plot(msft_df, "MSFT.Adjusted", "Microsoft Corp. (MSFT)", "green")
+# Wrapper function to create adjusted price plots for multiple stocks
+create_all_stock_plots <- function(data_list, colors) {
+  mapply(function(data, ticker, color) {
+    create_stock_plot(data, paste0(ticker, ".Adjusted"), paste0(ticker, " Inc. (" , ticker, ")"), color)
+  },
+  data = data_list,
+  ticker = names(colors),
+  color = colors,
+  SIMPLIFY = FALSE)
+}
 
-p1
-p2
-p3
+# List of stock data frames
+data_list <- list(AAPL = aapl_df, MSFT = msft_df, TSLA = tsla_df)
+
+plots_Adj <- create_all_stock_plots(data_list, colors)
+
+# Display plots
+plots_Adj[[1]]
+plots_Adj[[2]]
+plots_Adj[[3]]
+
 
 ```
 
@@ -206,16 +222,19 @@ In the code below, we use the <code>dailyReturn()</code> function from the <code
 
 
 ```{r}
-#| warning: false
-returns_aapl <- dailyReturn(Ad(AAPL))
-returns_msft <- dailyReturn(Ad(MSFT))
-returns_tsla <- dailyReturn(Ad(TSLA))
-returns_df <- merge(
-  "AAPL" = returns_aapl,
-  "MSFT" = returns_msft,
-  "TSLA" = returns_tsla
+# Function to get daily returns from adjusted prices for a list of symbols
+get_daily_returns <- function(symbols) {
+  lapply(symbols, function(sym) dailyReturn(Ad(get(sym))))
+}
 
-)
+# Define stock tickers
+tickers <- c("AAPL", "MSFT", "TSLA")
+
+# Get daily return series for each ticker
+returns_list <- get_daily_returns(tickers)
+
+# Assign ticker names to the list elements
+names(returns_list) <- tickers
 
 ```
 
@@ -226,31 +245,29 @@ In the code below, we use a line chart to visualize and examine the time series 
 
 
 ```{r}
+# Function to plot daily returns for a single stock
 plot_daily_return <- function(return_xts, ticker, line_color = "blue") {
   plot_ly() %>%
     add_lines(
-      x = ~index(return_xts),
-      y = ~coredata(return_xts),
+      x = ~index(return_xts),             # Dates on x-axis
+      y = ~coredata(return_xts),          # Return values on y-axis
       name = ticker,
       line = list(color = line_color)
     ) %>%
     layout(
+      title = paste("Daily Return of", ticker),
       xaxis = list(title = "Date"),
-      yaxis = list(
-        title = sprintf("Daily Return of %s", ticker),
-        titlefont = list(size = 10)),
+      yaxis = list(title = "Daily Return"),
       legend = list(x = 0.1, y = 0.9)
     )
 }
 
-p1 <- plot_daily_return(returns_aapl, "AAPL", "green")
-p2 <- plot_daily_return(returns_msft, "MSFT", "blue")
-p3 <- plot_daily_return(returns_tsla, "TSLA", "red")
+# Generate plots for all stocks in returns_list using specified colors
+plots_Adj_Daily <- mapply(plot_daily_return, returns_list, names(colors), colors, SIMPLIFY = FALSE)
 
-p1
-p2
-p3
-
+plots_Adj_Daily[[1]]
+plots_Adj_Daily[[2]]
+plots_Adj_Daily[[3]]
 
 ```
 
@@ -281,23 +298,26 @@ In the code below, we group daily returns into half-year periods and calculate t
 </div>
 
 
+
+
+
+
 ```{r}
-returns_combined <- merge(returns_aapl, returns_msft, returns_tsla)
+# Convert xts object to data frame and add HalfYear column (e.g., "2023 H1")
+create_halfyear_df <- function(returns_xts) {
+  df <- data.frame(Date = index(returns_xts), coredata(returns_xts))
+  df %>%
+    mutate(HalfYear = paste0(year(Date), " H", ifelse(month(Date) <= 6, 1, 2)))
+}
+
+# Merge daily returns of AAPL, MSFT, and TSLA into one xts object
+returns_combined <- merge(returns_list$AAPL, returns_list$MSFT, returns_list$TSLA)
 colnames(returns_combined) <- c("AAPL", "MSFT", "TSLA")
-returns_df <- data.frame(Date = index(returns_combined),
-                         coredata(returns_combined))
-returns_df <- returns_df %>%
-  mutate(HalfYear = paste0(year(Date), " H", ifelse(month(Date) <= 6, 1, 2)))
-```
 
+# Convert to data frame and add HalfYear labels
+returns_df <- create_halfyear_df(returns_combined)
 
-
-```{r}
-returns_df <- data.frame(Date = index(returns_combined),
-                         coredata(returns_combined))
-returns_df <- returns_df %>%
-  mutate(HalfYear = paste0(year(Date), " H", ifelse(month(Date) <= 6, 1, 2)))
-
+# Group by HalfYear and calculate mean & standard deviation of returns
 grouped_data <- returns_df %>%
   group_by(HalfYear) %>%
   summarise(across(c(AAPL, MSFT, TSLA),
@@ -313,43 +333,52 @@ In the code below, we add event labels and lines to highlight key periods.
 </div>
 
 
-
-
-
-```{r}
-grouped_data$HalfYear <- factor(grouped_data$HalfYear, levels = grouped_data$HalfYear)
-
-event_labels <- data.frame(
-  HalfYear = c("2020 H1", "2021 H1", "2022 H1", "2023 H1"),
-  label = c("COVID", "Vaccine", "War", "AI")
-)
-
-event_lines <- lapply(event_labels$HalfYear, function(h) {
-  list(
-    type = "line",
-    x0 = h,
-    x1 = h,
-    y0 = 0,
-    y1 = 1,
-    xref = "x",
-    yref = "paper",
-    line = list(color = "red", dash = "dash", width = 0.5)
-  )
-})
-```
-
 <div style="background-color:#f1fdf5; border-left:4px solid #81c784; padding:10px 16px; margin: 20px 0; font-size:0.95em; color:#2e7d32;">
 In the code below, we add event labels and lines to highlight key periods.
 </div>
 
 
 
-```{r}
 
+```{r}
+# Ensure HalfYear is treated as an ordered factor
+grouped_data$HalfYear <- factor(grouped_data$HalfYear, levels = grouped_data$HalfYear)
+
+# Define key events to annotate specific half-years
+event_labels <- data.frame(
+  HalfYear = c("2020 H1", "2021 H1", "2022 H1", "2023 H1"),
+  label = c("COVID", "Vaccine", "War", "AI")
+)
+
+# Create vertical dashed lines for each event to be added to plotly plots
+event_lines <- lapply(event_labels$HalfYear, function(h) {
+  list(
+    type = "line",
+    x0 = h, x1 = h,        # Position line at the HalfYear
+    y0 = 0, y1 = 1,        
+    xref = "x", yref = "paper",  
+    line = list(color = "red", dash = "dash", width = 0.5)
+  )
+})
+
+```
+
+
+
+```{r}
+# Create a volatility plot over half-year periods
 volatility_plot <- plot_ly(data = grouped_data) %>%
+  
+  # Add AAPL volatility line
   add_trace(x = ~HalfYear, y = ~AAPL_SD, name = "AAPL", type = 'scatter', mode = 'lines+markers') %>%
+  
+  # Add MSFT volatility line
   add_trace(x = ~HalfYear, y = ~MSFT_SD, name = "MSFT", type = 'scatter', mode = 'lines+markers') %>%
+  
+  # Add TSLA volatility line
   add_trace(x = ~HalfYear, y = ~TSLA_SD, name = "TSLA", type = 'scatter', mode = 'lines+markers') %>%
+  
+  # Add event annotations at the bottom of the plot
   add_annotations(
     data = event_labels,
     x = ~HalfYear,
@@ -359,17 +388,16 @@ volatility_plot <- plot_ly(data = grouped_data) %>%
     yanchor = "bottom",
     font = list(color = "red", size = 10)
   ) %>%
+  
   layout(
     title = "6-Month Volatility by Stock with Key Events",
     xaxis = list(title = "Period (Half-Year)", tickangle = -45),
     yaxis = list(title = "Volatility (Standard Deviation)"),
     legend = list(title = list(text = "Stock")),
-    shapes = event_lines
+    shapes = event_lines  # Add vertical dashed event lines
   )
 
-
 volatility_plot
-
 ```
 
 
@@ -420,14 +448,22 @@ In the code below, we create a chart that shows how returns changed over time an
 
 
 ```{r}
+# Create a line plot showing 6-month average returns
 return_plot <- plot_ly(data = grouped_data) %>%
+
+  # Add AAPL average returns
   add_trace(x = ~HalfYear, y = ~AAPL_Mean, name = "AAPL",
             type = 'scatter', mode = 'lines+markers', line = list(color = 'blue')) %>%
+
+  # Add MSFT average returns
   add_trace(x = ~HalfYear, y = ~MSFT_Mean, name = "MSFT",
             type = 'scatter', mode = 'lines+markers', line = list(color = 'orange')) %>%
+
+  # Add TSLA average returns
   add_trace(x = ~HalfYear, y = ~TSLA_Mean, name = "TSLA",
             type = 'scatter', mode = 'lines+markers', line = list(color = 'green')) %>%
 
+  # Add annotations for major market events 
   add_annotations(
     data = event_labels,
     x = ~HalfYear,
@@ -438,16 +474,19 @@ return_plot <- plot_ly(data = grouped_data) %>%
     font = list(color = "red", size = 12)
   ) %>%
 
+  # Configure plot layout
   layout(
     title = "6-Month Average Returns by Stock with Key Events",
-    xaxis = list(title = "Period (Half-Year)", tickangle = -45),
-    yaxis = list(title = "Average Daily Return", tickformat = ".1%"),
-    legend = list(title = list(text = "Stock")),
-    shapes = event_lines,
-    hovermode = "x unified"
+    xaxis = list(title = "Period (Half-Year)", tickangle = -45), 
+    yaxis = list(title = "Average Daily Return", tickformat = ".1%"), 
+    legend = list(title = list(text = "Stock")),  
+    shapes = event_lines,  # Add vertical dashed lines for events
+    hovermode = "x unified"  # Show unified hover tooltip across lines
   )
 
+# Display the return plot
 return_plot
+
 ```
 
 
@@ -485,27 +524,35 @@ This comparison could also be done using summary statistics or a table of values
 
 
 ```{r}
+# Remove missing values from the combined returns data
 returns_clean <- na.omit(returns_combined)
+
+# Convert cleaned xts object to a data frame
 returns_df <- data.frame(Date = index(returns_clean), coredata(returns_clean))
 
+# Calculate average daily return for each stock
 mean_vals <- colMeans(returns_df[, c("AAPL", "MSFT", "TSLA")])
+
+# Calculate standard deviation (volatility) for each stock
 sd_vals <- apply(returns_df[, c("AAPL", "MSFT", "TSLA")], 2, sd)
 
+# Create a summary data frame with mean and standard deviation
 summary_stats <- data.frame(
   Ticker = names(mean_vals),
   Mean = as.numeric(mean_vals),
   SD = as.numeric(sd_vals)
 )
 
+# Plot: Expected return vs risk (volatility)
 ggplot(summary_stats, aes(x = Mean, y = SD, label = Ticker, color = Ticker)) +
-  geom_point(size = 3) +
-  geom_text(nudge_y = 0.001, size = 5, show.legend = FALSE) +
+  geom_point(size = 3) +                        
+  geom_text(nudge_y = 0.001, size = 3, show.legend = FALSE) +  
   labs(
     title = "Expected Daily Return vs Risk (Standard Deviation)",
     x = "Expected Daily Return",
     y = "Risk (Standard Deviation)"
   ) +
-  theme_minimal()
+  theme_minimal()                               # Clean plot style
 
 ```
 
@@ -613,12 +660,15 @@ We created the linear model below to visually show the relationship between Appl
 
 ```{r}
 ggplot(returns, aes(x = SP500_Excess, y = AAPL_Excess)) +
-  geom_point(alpha = 0.3, color = "steelblue") +
-  geom_smooth(method = "lm", color = "firebrick", se = FALSE) +
-  labs(title = "AAPL Excess Return vs. S&P 500 Excess Return",
-       x = "S&P 500 Excess Return",
-       y = "AAPL Excess Return") +
+  geom_point(alpha = 0.3, color = "steelblue") + # Plot daily excess returns
+  geom_smooth(method = "lm", color = "firebrick", se = FALSE) + # Add CAPM regression line (beta)
+  labs(
+    title = "AAPL Excess Return vs. S&P 500 Excess Return",
+    x = "S&P 500 Excess Return",
+    y = "AAPL Excess Return"
+  ) +
   theme_minimal()
+
 ```
 
 The red line you see is the regression line (sometimes called the CAPM fit). It shows what the model predicts about how Apple’s excess returns move in relation to the S&P 500’s excess returns.
@@ -642,21 +692,58 @@ Expected return = Risk Free Rate + [Beta x Market Return Premium]
 - Market risk premium” is typically taken from financial reports, academic sources (like Damodaran), or calculated as the difference between average market returns (e.g., S&P 500) and the current risk-free rate.
 
 
+<div style="background-color:#f1fdf5; border-left:4px solid #81c784; padding:10px 16px; margin: 20px 0; font-size:0.95em; color:#2e7d32;">
+The function calculates a stock’s expected annual return using CAPM by estimating beta from daily returns and applying the CAPM formula. It returns the result as a percentage.
+</div>
 ```{r}
-# Given values
-rf_annual <- 0.025     
-market_risk_premium <- 0.075  
-
-# CAPM expected return calculation
-expected_return <- rf_annual + beta * market_risk_premium
-expected_return_percent <- expected_return * 100 
+rf_annual = 0.025   
+market_risk_premium <- 0.06
+```
 
 
-cat("Expected return (annual, %):", round(expected_return_percent, 2), "%\n")
+```{r}
+# Calculates expected annual return (%) of a stock using CAPM
+capm_expected_return <- function(stock_name, rf_annual, market_risk_premium) {
+  stock <- get(stock_name)       # Get stock data
+  market <- GSPC                 # Use S&P 500 as the market
+  
+  # Get daily log returns
+  stock_ret <- dailyReturn(Cl(stock), type = "log")
+  market_ret <- dailyReturn(Cl(market), type = "log")
+  
+  # Convert annual risk-free rate to daily
+  rf_daily <- rf_annual / 252
+  
+  # Calculate excess returns
+  stock_excess <- stock_ret - rf_daily
+  market_excess <- market_ret - rf_daily
+  
+  # Merge and clean data
+  df <- na.omit(merge(stock_excess, market_excess))
+  colnames(df) <- c("Stock", "Market")
+  
+  # Estimate beta using linear regression
+  model <- lm(Stock ~ Market, data = df)
+  beta <- coef(model)["Market"]
+  
+  # Apply CAPM formula
+  expected <- rf_annual + beta * market_risk_premium
+  expected_percent <- expected * 100
+  
+  # Print and return expected return
+  cat(sprintf("Expected annual return for %s: %.2f%%  |  Beta: %.2f\n",
+              stock_name, expected_percent, beta))
+  return(expected_percent)
+}
 
 ```
 
-According to the CAPM model, Apple’s expected annual return is approximately 11–11.5%. This means that, given the current risk-free rate, market risk premium, and Apple’s beta, investors can expect an average annual return of around 11% if they hold Apple stock.
+```{r}
+capm_expected_return("AAPL", rf_annual, market_risk_premium)
+```
+
+
+According to the CAPM model, Apple’s expected annual return is approximately 9.68%. This means that, given the current risk-free rate, market risk premium, and Apple’s beta, investors can expect an average annual return of around 11% if they hold Apple stock.
 
 
 *How about the risk ?*
@@ -664,34 +751,19 @@ An 11% annual return isn’t risky on its own, but in finance, such high returns
 
 ### Repeating the CAPM Interpretation for TSLA and MSFT
 
-```{r}
-msft_ret <- dailyReturn(Cl(MSFT), type = "log")
-tsla_ret <- dailyReturn(Cl(TSLA), type = "log")
-msft_excess <- msft_ret - rf
-tsla_excess <- tsla_ret - rf
-```
 
 ```{r}
-capm_model_msft <- lm(msft_excess ~ sp500_excess)
-beta_msft <- coef(capm_model_msft)["sp500_excess"]
-expected_return_msft <- rf_annual + beta_msft * market_risk_premium
-cat("Expected annual return for Microsoft (MSFT):", round(expected_return_msft * 100, 2), "%\n")
+capm_expected_return("MSFT", rf_annual, market_risk_premium)
+capm_expected_return("TSLA", rf_annual, market_risk_premium)
 ```
 
-```{r}
-capm_model_tsla <- lm(tsla_excess ~ sp500_excess)
-beta_tsla <- coef(capm_model_tsla)["sp500_excess"]
-expected_return_tsla <- rf_annual + beta_tsla * market_risk_premium
-cat("Expected annual return for Tesla (TSLA):", round(expected_return_tsla * 100, 2), "%\n")
-
-```
 
 Microsoft (MSFT):
-Expected annual return = 11.35%
+Expected annual return = 9.58%
 - Indicates moderate risk and stable return, closely aligned with market movements.
 
 Tesla (TSLA):
-Expected annual return = 14.32%
+Expected annual return = 11.96%
 - Suggests higher risk and higher expected return, reflecting stronger sensitivity to market changes.
 
 In short: Tesla offers greater return potential but comes with higher risk, while Microsoft and Apple provide more stable performance with lower volatility.
@@ -770,12 +842,13 @@ This visualization was chosen because it makes it incredibly easy to spot relati
 
 
 ```{r message=TRUE}
-
-
+# Compute correlation matrix for selected stocks
 cor_matrix <- cor(returns_combined[, c("AAPL", "MSFT", "TSLA")], use = "complete.obs")
 
+# Plot upper triangle of the correlation matrix
 corrplot(cor_matrix, method = "color", type = "upper", 
          tl.col = "black", tl.srt = 45, addCoef.col = "black")
+
 
 ```
 
@@ -821,31 +894,32 @@ To test this, we will compare the Sharpe ratio of our proposed portfolio against
 
 
 ```{r}
+# Merge daily returns of AAPL, MSFT, and TSLA, removing NAs
 returns <- na.omit(merge(
   dailyReturn(Ad(AAPL)),
   dailyReturn(Ad(MSFT)),
   dailyReturn(Ad(TSLA))
 ))
 
+# Function to calculate and print the annualized Sharpe Ratio of a portfolio
 portfolio_sharpe <- function(weights, returns, name) {
-  mean_ret <- colMeans(returns) * 252
-  cov_matrix <- cov(returns) * 252
-  port_return <- sum(weights * mean_ret)
-  port_variance <- t(weights) %*% cov_matrix %*% weights
-  port_volatility <- sqrt(port_variance)
-  port_sharpe <- port_return / port_volatility
+  mean_ret <- colMeans(returns) * 252            # Annualized mean returns
+  cov_matrix <- cov(returns) * 252               # Annualized covariance matrix
+  port_return <- sum(weights * mean_ret)         # Portfolio expected return
+  port_variance <- t(weights) %*% cov_matrix %*% weights  # Portfolio variance
+  port_volatility <- sqrt(port_variance)         # Portfolio standard deviation
+  port_sharpe <- port_return / port_volatility   # Sharpe Ratio
   
   cat("\n====", name, "====\n")
   cat("Sharpe Ratio: ", round(port_sharpe, 2), "\n")
 }
 
-
-portfolio_sharpe(c(0.50, 0.30, 0.20), returns, "Proposed Portfolio")       
-portfolio_sharpe(c(0.33, 0.33, 0.33), returns, "Random Portfolio")         
-portfolio_sharpe(c(0.00, 0.00, 1.00), returns, "100% Tesla")              
-portfolio_sharpe(c(0.00, 1.00, 0.00), returns, "100% Apple")               
-portfolio_sharpe(c(1.00, 0.00, 0.00), returns, "100% Microsoft")           
-
+# Evaluate Sharpe Ratios for different portfolios
+portfolio_sharpe(c(0.50, 0.30, 0.20), returns, "Proposed Portfolio")
+portfolio_sharpe(c(0.33, 0.33, 0.33), returns, "Random Portfolio")
+portfolio_sharpe(c(0.00, 0.00, 1.00), returns, "100% Tesla")
+portfolio_sharpe(c(0.00, 1.00, 0.00), returns, "100% Apple")
+portfolio_sharpe(c(1.00, 0.00, 0.00), returns, "100% Microsoft")
 
 ```
 
@@ -885,12 +959,6 @@ Quantitative results can inform decision-making—but they should be used as a g
 
 # Sources
 
-Apple vs. Tesla: Which Growth Stock to Own? — TheStreet
-https://www.thestreet.com/apple/stock/apple-vs-tesla-which-growth-stock-to-own
-
-Breaking Down the Geometric Mean — Investopedia
-https://www.investopedia.com/articles/investing/071113/breaking-down-geometric-mean.asp
-
 Testing ChatGPT: Arithmetic vs. Geometric Returns — TheStreet Retirement Daily
 https://www.thestreet.com/retirement-daily/your-money/testing-chatgpt-arithmetic-vs-geometric-returns
 
@@ -900,8 +968,6 @@ https://corporatefinanceinstitute.com/resources/career-map/sell-side/capital-mar
 Sharpe Ratio — Investopedia
 https://www.investopedia.com/terms/s/sharperatio.asp
 
-Tesla-meme — 9GAG
-https://9gag.com/tag/cybertruck
 
 What is CAPM Formula? — Corporate Finance Institute
 https://corporatefinanceinstitute.com/resources/valuation/what-is-capm-formula/
