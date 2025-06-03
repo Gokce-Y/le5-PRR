@@ -817,7 +817,7 @@ Quantitative results can inform decision-making—but they should be used as a g
 
 ------------------------------------------------------------------------
 
-# Thank You & Goodbye
+# Thank You
 
 Thank you so much for taking the time to read our report. Working on this project taught us a lot—both about finance and how to work with R. We truly hope readers can find something useful or inspiring in it too.
 
